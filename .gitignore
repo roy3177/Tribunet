@@ -1,0 +1,57 @@
+# ── Dependencies ──────────────────────────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ── Build outputs ─────────────────────────────────────────────────────────────
+frontend/dist/
+frontend/build/
+
+# ── Environment variables (NEVER upload these) ────────────────────────────────
+.env
+.env.local
+.env.development
+.env.production
+frontend/.env
+frontend/.env.local
+backend/.env
+backend/.env.local
+
+# ── AWS credentials (NEVER upload these) ─────────────────────────────────────
+.aws/
+*.pem
+*.key
+credentials
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+venv/
+.venv/
+env/
+*.egg-info/
+dist/
+.pytest_cache/
+
+# ── SAM / AWS build artifacts ─────────────────────────────────────────────────
+.aws-sam/
+samconfig.toml
+
+# ── IDE & OS ──────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Misc ──────────────────────────────────────────────────────────────────────
+*.zip
+*.tar.gz

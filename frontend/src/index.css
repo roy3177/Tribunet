@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-dark-950 text-dark-100 font-sans antialiased;
+    min-height: 100vh;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-dark-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-pitch-700 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-pitch-600;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-pitch-600 hover:bg-pitch-500 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-pitch-400 focus:ring-offset-2 focus:ring-offset-dark-900 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply bg-dark-800 hover:bg-dark-700 text-dark-100 font-semibold py-2.5 px-5 rounded-lg border border-dark-600 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-dark-500 focus:ring-offset-2 focus:ring-offset-dark-900;
+  }
+
+  .btn-danger {
+    @apply bg-red-700 hover:bg-red-600 text-white font-semibold py-2.5 px-5 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2 focus:ring-offset-dark-900;
+  }
+
+  .card {
+    @apply bg-dark-900 border border-dark-800 rounded-xl p-5 shadow-lg;
+  }
+
+  .input-field {
+    @apply w-full bg-dark-800 border border-dark-600 text-dark-100 placeholder-dark-400 rounded-lg px-4 py-2.5 focus:outline-none focus:border-pitch-500 focus:ring-1 focus:ring-pitch-500 transition-colors duration-200;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-green {
+    @apply badge bg-pitch-900 text-pitch-300 border border-pitch-800;
+  }
+
+  .badge-red {
+    @apply badge bg-red-900 text-red-300 border border-red-800;
+  }
+
+  .badge-gold {
+    @apply badge bg-yellow-900 text-yellow-300 border border-yellow-800;
+  }
+}
+
+/* MapLibre GL overrides */
+.maplibregl-map {
+  @apply rounded-xl;
+}
+
+.maplibregl-ctrl-logo {
+  display: none !important;
+}
