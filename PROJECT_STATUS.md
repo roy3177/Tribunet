@@ -175,6 +175,6 @@
 ## Live URLs
 
 | Resource | URL |
-|---|---|
+|---|---|----|
 | Website (CloudFront) | https://d3qx6x8ydteha.cloudfront.net |
 | API Gateway | https://3mijm4cjad.execute-api.us-east-1.amazonaws.com/prod |
