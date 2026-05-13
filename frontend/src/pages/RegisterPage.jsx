@@ -57,7 +57,9 @@ function PasswordStrength({ password }) {
   const checks = [
     { label: 'לפחות 8 תווים', ok: password.length >= 8 },
     { label: 'אות גדולה', ok: /[A-Z]/.test(password) },
+    { label: 'אות קטנה', ok: /[a-z]/.test(password) },
     { label: 'מספר', ok: /\d/.test(password) },
+    { label: 'תו מיוחד (!@#$)', ok: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password) },
   ]
   if (!password) return null
   return (
@@ -93,7 +95,9 @@ function RegisterForm({ onSuccess }) {
     if (!password)           e.password = 'נדרשת סיסמה'
     else if (password.length < 8) e.password = 'סיסמה חייבת להיות לפחות 8 תווים'
     else if (!/[A-Z]/.test(password)) e.password = 'נדרשת לפחות אות גדולה אחת'
+    else if (!/[a-z]/.test(password)) e.password = 'נדרשת לפחות אות קטנה אחת'
     else if (!/\d/.test(password))    e.password = 'נדרש לפחות מספר אחד'
+    else if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) e.password = 'נדרש לפחות תו מיוחד (!@#$)'
     if (confirm !== password) e.confirm = 'הסיסמאות אינן תואמות'
     setErrors(e)
     return Object.keys(e).length === 0

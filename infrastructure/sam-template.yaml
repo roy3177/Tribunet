@@ -1,0 +1,327 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Tribunet - Israeli Football Match Platform (Serverless)
+
+# ── Parameters ────────────────────────────────────────────────────────────────
+Parameters:
+  CognitoUserPoolId:
+    Type: String
+    Description: Cognito User Pool ID (from AWS Console)
+  CognitoClientId:
+    Type: String
+    Description: Cognito App Client ID (from AWS Console)
+  Stage:
+    Type: String
+    Default: prod
+    AllowedValues: [dev, prod]
+
+# ── Globals ───────────────────────────────────────────────────────────────────
+Globals:
+  Function:
+    Runtime: python3.13
+    Timeout: 15
+    MemorySize: 256
+    CodeUri: ../backend/
+    Environment:
+      Variables:
+        COGNITO_USER_POOL_ID: !Ref CognitoUserPoolId
+        COGNITO_CLIENT_ID:    !Ref CognitoClientId
+        DYNAMODB_USERS_TABLE:     !Ref UsersTable
+        DYNAMODB_MATCHES_TABLE:   !Ref MatchesTable
+        DYNAMODB_STADIUMS_TABLE:  !Ref StadiumsTable
+        DYNAMODB_FAVORITES_TABLE: !Ref FavoritesTable
+        DYNAMODB_TEAMS_TABLE:     !Ref TeamsTable
+        DYNAMODB_LEAGUES_TABLE:   !Ref LeaguesTable
+        FRONTEND_URL: '*'
+
+Resources:
+
+  # ── API Gateway HTTP API ─────────────────────────────────────────────────────
+  TribunetApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref Stage
+      Auth:
+        DefaultAuthorizer: CognitoAuth
+        Authorizers:
+          CognitoAuth:
+            JwtConfiguration:
+              issuer: !Sub 'https://cognito-idp.${AWS::Region}.amazonaws.com/${CognitoUserPoolId}'
+              audience:
+                - !Ref CognitoClientId
+            IdentitySource: '$request.header.Authorization'
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+
+  # ── DynamoDB Tables ───────────────────────────────────────────────────────────
+
+  MatchesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'tribunet-matches-${Stage}'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: matchId
+          AttributeType: S
+        - AttributeName: stadiumId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: matchId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: stadiumId-index
+          KeySchema:
+            - AttributeName: stadiumId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+
+  StadiumsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'tribunet-stadiums-${Stage}'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: stadiumId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: stadiumId
+          KeyType: HASH
+
+  FavoritesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'tribunet-favorites-${Stage}'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: matchId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: matchId
+          KeyType: RANGE
+
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'tribunet-users-${Stage}'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+
+  TeamsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'tribunet-teams-${Stage}'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: teamId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: teamId
+          KeyType: HASH
+
+  LeaguesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub 'tribunet-leagues-${Stage}'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: leagueId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: leagueId
+          KeyType: HASH
+
+  # ── IAM Role shared by all Lambda functions ───────────────────────────────────
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DynamoDBFullAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                  - dynamodb:UpdateItem
+                Resource:
+                  - !GetAtt MatchesTable.Arn
+                  - !Sub '${MatchesTable.Arn}/index/*'
+                  - !GetAtt StadiumsTable.Arn
+                  - !GetAtt FavoritesTable.Arn
+                  - !Sub '${FavoritesTable.Arn}/index/*'
+                  - !GetAtt UsersTable.Arn
+                  - !GetAtt TeamsTable.Arn
+                  - !GetAtt LeaguesTable.Arn
+
+  # ── Lambda: Matches ───────────────────────────────────────────────────────────
+  MatchesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: functions.matches.handler.main
+      Role: !GetAtt LambdaRole.Arn
+      Events:
+        GetMatches:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /matches
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        GetMatch:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /matches/{id}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        CreateMatch:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /matches
+            Method: POST
+        UpdateMatch:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /matches/{id}
+            Method: PUT
+        DeleteMatch:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /matches/{id}
+            Method: DELETE
+
+  # ── Lambda: Stadiums ──────────────────────────────────────────────────────────
+  StadiumsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: functions.stadiums.handler.main
+      Role: !GetAtt LambdaRole.Arn
+      Events:
+        GetStadiums:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /stadiums
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        GetStadium:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /stadiums/{id}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        CreateStadium:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /stadiums
+            Method: POST
+        UpdateStadium:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /stadiums/{id}
+            Method: PUT
+        DeleteStadium:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /stadiums/{id}
+            Method: DELETE
+
+  # ── Lambda: Favorites ─────────────────────────────────────────────────────────
+  FavoritesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: functions.favorites.handler.main
+      Role: !GetAtt LambdaRole.Arn
+      Events:
+        GetFavorites:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /favorites
+            Method: GET
+        AddFavorite:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /favorites/{id}
+            Method: POST
+        RemoveFavorite:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /favorites/{id}
+            Method: DELETE
+
+  # ── Lambda: Users ─────────────────────────────────────────────────────────────
+  UsersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: functions.users.handler.main
+      Role: !GetAtt LambdaRole.Arn
+      Events:
+        GetUsers:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /users
+            Method: GET
+
+# ── Outputs ───────────────────────────────────────────────────────────────────
+Outputs:
+  ApiUrl:
+    Description: API Gateway endpoint — paste into frontend/.env as VITE_API_URL
+    Value: !Sub 'https://${TribunetApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}'
+    Export:
+      Name: TribunetApiUrl
+
+  MatchesTable:
+    Description: DynamoDB Matches table name
+    Value: !Ref MatchesTable
+
+  StadiumsTable:
+    Description: DynamoDB Stadiums table name
+    Value: !Ref StadiumsTable
