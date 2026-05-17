@@ -29,6 +29,7 @@ Globals:
     Runtime: python3.13
     Timeout: 15
     MemorySize: 256
+    Tracing: Active
     CodeUri: ../backend/
     Environment:
       Variables:
@@ -193,6 +194,22 @@ Resources:
                   - !GetAtt UsersTable.Arn
                   - !GetAtt TeamsTable.Arn
                   - !GetAtt LeaguesTable.Arn
+        - PolicyName: SNSPublish
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action: sns:Publish
+                Resource: !Sub 'arn:aws:sns:${AWS::Region}:${AWS::AccountId}:tribunet-alerts-${Stage}'
+        - PolicyName: XRayAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - xray:PutTraceSegments
+                  - xray:PutTelemetryRecords
+                Resource: '*'
 
   # ── Lambda: Matches ───────────────────────────────────────────────────────────
   MatchesFunction:
@@ -345,6 +362,23 @@ Resources:
             ApiId: !Ref TribunetApi
             Path: /users/{id}
             Method: DELETE
+
+  # ── Lambda: Scheduler (EventBridge weekly report) ────────────────────────────
+  SchedulerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: functions.scheduler.handler.main
+      Role: !GetAtt LambdaRole.Arn
+      Environment:
+        Variables:
+          ALERTS_TOPIC_ARN: !Ref AlertsTopic
+      Events:
+        WeeklySchedule:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 7 ? * SUN *)
+            Description: Weekly match report every Sunday at 7:00 UTC (9:00 Israel time)
+            Enabled: true
 
   # ── SNS Topic for CloudWatch Alarm notifications ─────────────────────────────
   AlertsTopic:

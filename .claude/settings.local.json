@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:www.leaan.co.il)"
+      "WebFetch(domain:www.leaan.co.il)",
+      "Bash(xargs grep -l \"map\\\\|Map\")"
     ]
   }
 }

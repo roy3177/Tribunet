@@ -1,3 +1,2 @@
 boto3==1.35.0
-PyJWT==2.9.0
-cryptography==43.0.1
+# aws-xray-sdk removed: wrapt binary wheel incompatible with Lambda Linux when built on Windows
