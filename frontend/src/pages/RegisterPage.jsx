@@ -85,7 +85,7 @@ function RegisterForm({ onSuccess }) {
   const [errors, setErrors]     = useState({})
   const [apiError, setApiError] = useState('')
   const [loading, setLoading]   = useState(false)
-  const { register }            = useAuth()
+  const { register, resendCode } = useAuth()
 
   function validate() {
     const e = {}
@@ -112,9 +112,15 @@ function RegisterForm({ onSuccess }) {
       await register(email, password, name)
       onSuccess(email)
     } catch (err) {
-      const msg = err?.message ?? ''
-      if (msg.includes('UsernameExistsException')) setApiError('כתובת האימייל כבר רשומה במערכת')
-      else if (msg.includes('InvalidPasswordException')) setApiError('הסיסמה אינה עומדת בדרישות')
+      const errName = err?.name ?? ''
+      if (errName === 'UsernameExistsException') {
+        try {
+          await resendCode(email)
+          onSuccess(email)
+        } catch {
+          setApiError('כתובת האימייל כבר רשומה ומאומתת במערכת')
+        }
+      } else if (errName === 'InvalidPasswordException') setApiError('הסיסמה אינה עומדת בדרישות')
       else setApiError('שגיאה בהרשמה, נסה שוב')
     } finally {
       setLoading(false)
@@ -181,15 +187,17 @@ function ConfirmForm({ email }) {
   async function handleSubmit(e) {
     e.preventDefault()
     setApiError('')
-    if (!code.trim()) { setError('נדרש קוד אימות'); return }
+    const trimmedCode = code.trim()
+    if (!trimmedCode) { setError('נדרש קוד אימות'); return }
     setLoading(true)
     try {
-      await confirmRegistration(email, code)
+      await confirmRegistration(email, trimmedCode)
       navigate('/login')
     } catch (err) {
-      const msg = err?.message ?? ''
-      if (msg.includes('CodeMismatchException')) setApiError('קוד שגוי, נסה שוב')
-      else if (msg.includes('ExpiredCodeException')) setApiError('הקוד פג תוקף — בקש קוד חדש')
+      const errName = err?.name ?? ''
+      if (errName === 'CodeMismatchException') setApiError('קוד שגוי, נסה שוב')
+      else if (errName === 'ExpiredCodeException') setApiError('הקוד פג תוקף — בקש קוד חדש')
+      else if (errName === 'NotAuthorizedException') navigate('/login') // already confirmed
       else setApiError('שגיאה באימות, נסה שוב')
     } finally {
       setLoading(false)

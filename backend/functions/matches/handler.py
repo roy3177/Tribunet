@@ -1,6 +1,6 @@
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from shared import response
 from shared.auth import require_admin
@@ -71,6 +71,7 @@ def _create_match(event: dict):
         'hasTickets':  bool(body.get('hasTickets', False)),
         'ticketUrl':   body.get('ticketUrl', ''),
         'createdAt':   datetime.now(timezone.utc).isoformat(),
+        'ttl':         _compute_ttl(body.get('date', '')),
     }
     put_item(MATCHES_TABLE, item)
     return response.created(item)
@@ -91,6 +92,7 @@ def _update_match(event: dict, match_id: str):
         body['stadiumName'] = _resolve_stadium_name(stadium_id)
 
     updated = {**existing, **body, 'matchId': match_id}
+    updated['ttl'] = _compute_ttl(updated.get('date', ''))
     put_item(MATCHES_TABLE, updated)
     return response.ok(updated)
 
@@ -107,6 +109,13 @@ def _delete_match(event: dict, match_id: str):
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
+def _compute_ttl(date_str: str) -> int:
+    if not date_str:
+        return 0
+    dt = datetime.strptime(date_str, '%Y-%m-%d').replace(tzinfo=timezone.utc)
+    return int((dt + timedelta(days=1)).timestamp())
+
 
 def _resolve_stadium_name(stadium_id: str) -> str:
     if not stadium_id:

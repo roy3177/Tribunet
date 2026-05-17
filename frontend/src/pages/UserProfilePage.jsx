@@ -5,11 +5,11 @@ import { pageVariants, cardVariants, staggerContainer } from '../animations/vari
 import { useAuth } from '../context/AuthContext'
 
 export default function UserProfilePage() {
-  const { user, isAdmin, logout } = useAuth()
+  const { user, profile, isAdmin, logout } = useAuth()
   const navigate = useNavigate()
 
   const email       = user?.signInDetails?.loginId ?? ''
-  const displayName = email.split('@')[0] ?? 'משתמש'
+  const displayName = profile?.name ?? email.split('@')[0] ?? 'משתמש'
 
   async function handleLogout() {
     await logout()

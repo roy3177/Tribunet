@@ -1,43 +1,12 @@
-import { useRef } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useInView } from 'framer-motion'
 import { Map, Ticket, Star, Shield, Trophy, ArrowRight, Zap } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { pageVariants, cardVariants, staggerContainer, fadeIn } from '../animations/variants'
+import { getMatches } from '../services/matchService'
 
-// ─── Static mock data (replaced by API in Phase 4) ──────────────────────────
-const FEATURED_MATCHES = [
-  {
-    id: '1',
-    homeTeam: 'מכבי תל אביב',
-    awayTeam: 'הפועל באר שבע',
-    date: '2026-05-14',
-    time: '20:00',
-    stadium: 'בלומפילד',
-    league: 'ליגת העל',
-    hasTickets: true,
-  },
-  {
-    id: '2',
-    homeTeam: 'מכבי חיפה',
-    awayTeam: 'בית"ר ירושלים',
-    date: '2026-05-15',
-    time: '19:00',
-    stadium: 'סמי עופר',
-    league: 'ליגת העל',
-    hasTickets: true,
-  },
-  {
-    id: '3',
-    homeTeam: 'הפועל תל אביב',
-    awayTeam: 'אשדוד',
-    date: '2026-05-16',
-    time: '18:30',
-    stadium: 'בלומפילד',
-    league: 'ליגת העל',
-    hasTickets: false,
-  },
-]
+const ISRAELI_LEAGUES = ['ליגת העל', 'הליגה הלאומית', 'הליגה הארצית']
 
 const FEATURES = [
   {
@@ -155,9 +124,27 @@ function FeatureCard({ feature, index }) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function HomePage() {
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const matchesRef = useRef(null)
   const inView     = useInView(matchesRef, { once: true, margin: '-80px' })
+
+  const [featuredMatches, setFeaturedMatches] = useState([])
+  const [matchesLoading, setMatchesLoading]   = useState(true)
+
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0]
+    getMatches()
+      .then((matches) => {
+        const upcoming = matches
+          .filter(m => ISRAELI_LEAGUES.includes(m.league) && m.date >= today)
+          .sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
+          .slice(0, 3)
+          .map(m => ({ ...m, id: m.matchId, stadium: m.stadiumName }))
+        setFeaturedMatches(upcoming)
+      })
+      .catch(() => setFeaturedMatches([]))
+      .finally(() => setMatchesLoading(false))
+  }, [])
 
   return (
     <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
@@ -248,16 +235,34 @@ export default function HomePage() {
           </Link>
         </motion.div>
 
-        <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          animate={inView ? 'visible' : 'hidden'}
-          className="grid md:grid-cols-3 gap-5"
-        >
-          {FEATURED_MATCHES.map((match, i) => (
-            <MatchCard key={match.id} match={match} index={i} />
-          ))}
-        </motion.div>
+        {matchesLoading ? (
+          <div className="flex justify-center items-center py-16 text-dark-400">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+              className="w-6 h-6 border-2 border-pitch-500 border-t-transparent rounded-full mr-3"
+            />
+            טוען משחקים...
+          </div>
+        ) : featuredMatches.length === 0 ? (
+          <div className="text-center py-16">
+            <p className="text-dark-400 mb-4">אין משחקים קרובים כרגע</p>
+            <Link to="/map" className="text-pitch-400 hover:text-pitch-300 text-sm font-medium transition-colors">
+              ראה את כל המשחקים במפה <ArrowRight size={14} className="inline" />
+            </Link>
+          </div>
+        ) : (
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            animate={inView ? 'visible' : 'hidden'}
+            className="grid md:grid-cols-3 gap-5"
+          >
+            {featuredMatches.map((match, i) => (
+              <MatchCard key={match.id} match={match} index={i} />
+            ))}
+          </motion.div>
+        )}
       </section>
 
       {/* ── Features ────────────────────────────────────────────────────────── */}
@@ -283,7 +288,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Admin CTA (admins only) ──────────────────────────────────────────── */}
-      {user && (
+      {isAdmin && (
         <motion.section
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}

@@ -4,6 +4,7 @@ import {
   signOut,
   signUp,
   confirmSignUp,
+  resendSignUpCode,
   getCurrentUser,
   fetchAuthSession,
 } from 'aws-amplify/auth'
@@ -12,6 +13,7 @@ const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
+  const [profile, setProfile] = useState(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -23,11 +25,23 @@ export function AuthProvider({ children }) {
     try {
       const currentUser = await getCurrentUser()
       const session = await fetchAuthSession()
-      const groups = session.tokens?.idToken?.payload?.['cognito:groups'] ?? []
       setUser(currentUser)
-      setIsAdmin(groups.includes('Admins'))
+
+      const token = session.tokens?.idToken?.toString()
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/users/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (res.ok) {
+        const json = await res.json()
+        setProfile(json.data ?? null)
+        setIsAdmin(json.data?.role?.trim() === 'admin')
+      } else {
+        setProfile(null)
+        setIsAdmin(false)
+      }
     } catch {
       setUser(null)
+      setProfile(null)
       setIsAdmin(false)
     } finally {
       setLoading(false)
@@ -43,6 +57,7 @@ export function AuthProvider({ children }) {
   async function logout() {
     await signOut()
     setUser(null)
+    setProfile(null)
     setIsAdmin(false)
   }
 
@@ -63,9 +78,13 @@ export function AuthProvider({ children }) {
     return await confirmSignUp({ username: email, confirmationCode: code })
   }
 
+  async function resendCode(email) {
+    return await resendSignUpCode({ username: email })
+  }
+
   return (
     <AuthContext.Provider
-      value={{ user, isAdmin, loading, login, logout, register, confirmRegistration }}
+      value={{ user, profile, isAdmin, loading, login, logout, register, confirmRegistration, resendCode }}
     >
       {children}
     </AuthContext.Provider>

@@ -14,6 +14,14 @@ Parameters:
     Type: String
     Default: prod
     AllowedValues: [dev, prod]
+  AlertEmail:
+    Type: String
+    Default: tribunet15@gmail.com
+    Description: Primary email address to receive CloudWatch alarm notifications
+  AlertEmailSecondary:
+    Type: String
+    Default: roymeoded2512@gmail.com
+    Description: Secondary email address to receive CloudWatch alarm notifications
 
 # ── Globals ───────────────────────────────────────────────────────────────────
 Globals:
@@ -296,6 +304,22 @@ Resources:
             Path: /favorites/{id}
             Method: DELETE
 
+  # ── Lambda: Cognito Post-Confirmation Trigger ─────────────────────────────────
+  CognitoTriggerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: functions.cognito_trigger.handler.main
+      Role: !GetAtt LambdaRole.Arn
+
+  # Allows Cognito to invoke the trigger Lambda
+  CognitoTriggerPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt CognitoTriggerFunction.Arn
+      Principal: cognito-idp.amazonaws.com
+      SourceArn: !Sub 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${CognitoUserPoolId}'
+
   # ── Lambda: Users ─────────────────────────────────────────────────────────────
   UsersFunction:
     Type: AWS::Serverless::Function
@@ -303,12 +327,230 @@ Resources:
       Handler: functions.users.handler.main
       Role: !GetAtt LambdaRole.Arn
       Events:
+        GetMe:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /users/me
+            Method: GET
         GetUsers:
           Type: HttpApi
           Properties:
             ApiId: !Ref TribunetApi
             Path: /users
             Method: GET
+        DeleteUser:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /users/{id}
+            Method: DELETE
+
+  # ── SNS Topic for CloudWatch Alarm notifications ─────────────────────────────
+  AlertsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub 'tribunet-alerts-${Stage}'
+      Subscription:
+        - Protocol: email
+          Endpoint: !Ref AlertEmail
+        - Protocol: email
+          Endpoint: !Ref AlertEmailSecondary
+
+  # ── CloudWatch Alarms: MatchesFunction ────────────────────────────────────────
+  MatchesFunctionErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'tribunet-${Stage}-matches-errors'
+      AlarmDescription: MatchesFunction threw an unhandled exception
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref MatchesFunction
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlertsTopic
+
+  MatchesFunctionThrottlesAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'tribunet-${Stage}-matches-throttles'
+      AlarmDescription: MatchesFunction is being throttled
+      Namespace: AWS/Lambda
+      MetricName: Throttles
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref MatchesFunction
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlertsTopic
+
+  # ── CloudWatch Alarms: StadiumsFunction ──────────────────────────────────────
+  StadiumsFunctionErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'tribunet-${Stage}-stadiums-errors'
+      AlarmDescription: StadiumsFunction threw an unhandled exception
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref StadiumsFunction
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlertsTopic
+
+  StadiumsFunctionThrottlesAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'tribunet-${Stage}-stadiums-throttles'
+      AlarmDescription: StadiumsFunction is being throttled
+      Namespace: AWS/Lambda
+      MetricName: Throttles
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref StadiumsFunction
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlertsTopic
+
+  # ── CloudWatch Alarms: FavoritesFunction ─────────────────────────────────────
+  FavoritesFunctionErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'tribunet-${Stage}-favorites-errors'
+      AlarmDescription: FavoritesFunction threw an unhandled exception
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref FavoritesFunction
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlertsTopic
+
+  FavoritesFunctionThrottlesAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'tribunet-${Stage}-favorites-throttles'
+      AlarmDescription: FavoritesFunction is being throttled
+      Namespace: AWS/Lambda
+      MetricName: Throttles
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref FavoritesFunction
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlertsTopic
+
+  # ── CloudWatch Alarms: UsersFunction ─────────────────────────────────────────
+  UsersFunctionErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'tribunet-${Stage}-users-errors'
+      AlarmDescription: UsersFunction threw an unhandled exception
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref UsersFunction
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlertsTopic
+
+  UsersFunctionThrottlesAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'tribunet-${Stage}-users-throttles'
+      AlarmDescription: UsersFunction is being throttled
+      Namespace: AWS/Lambda
+      MetricName: Throttles
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref UsersFunction
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlertsTopic
+
+  # ── CloudWatch Alarms: CognitoTriggerFunction ─────────────────────────────────
+  CognitoTriggerFunctionErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'tribunet-${Stage}-cognito-trigger-errors'
+      AlarmDescription: CognitoTriggerFunction threw an unhandled exception
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref CognitoTriggerFunction
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlertsTopic
+
+  CognitoTriggerFunctionThrottlesAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub 'tribunet-${Stage}-cognito-trigger-throttles'
+      AlarmDescription: CognitoTriggerFunction is being throttled
+      Namespace: AWS/Lambda
+      MetricName: Throttles
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref CognitoTriggerFunction
+      Statistic: Sum
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions:
+        - !Ref AlertsTopic
 
 # ── Outputs ───────────────────────────────────────────────────────────────────
 Outputs:

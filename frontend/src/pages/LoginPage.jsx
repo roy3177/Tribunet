@@ -88,10 +88,10 @@ export default function LoginPage() {
       await login(email, password)
       navigate('/')
     } catch (err) {
-      const msg = err?.message ?? ''
-      if (msg.includes('UserNotFoundException') || msg.includes('NotAuthorizedException')) {
+      const errName = err?.name ?? ''
+      if (errName === 'UserNotFoundException' || errName === 'NotAuthorizedException') {
         setApiError('אימייל או סיסמה שגויים')
-      } else if (msg.includes('UserNotConfirmedException')) {
+      } else if (errName === 'UserNotConfirmedException') {
         setApiError('חשבון לא מאושר — בדוק את האימייל שלך')
       } else {
         setApiError('שגיאה בהתחברות, נסה שוב')
