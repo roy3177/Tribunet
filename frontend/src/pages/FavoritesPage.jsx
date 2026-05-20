@@ -45,8 +45,8 @@ export default function FavoritesPage() {
       initial="initial"
       animate="animate"
       exit="exit"
-      className="max-w-4xl mx-auto px-4 py-8"
     >
+      <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Header */}
       <motion.div
         variants={fadeIn}
@@ -70,6 +70,7 @@ export default function FavoritesPage() {
 
       {/* Content */}
       {loading ? (
+
         <div className="flex justify-center py-16">
           <div className="w-8 h-8 border-2 border-pitch-500 border-t-transparent rounded-full animate-spin" />
         </div>
@@ -149,6 +150,7 @@ export default function FavoritesPage() {
           </AnimatePresence>
         </motion.div>
       )}
+      </div>
     </motion.div>
   )
 }

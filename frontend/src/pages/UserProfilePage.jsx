@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { User, Mail, Shield, Heart, LogOut, Trophy, Map } from 'lucide-react'
 import { pageVariants, cardVariants, staggerContainer } from '../animations/variants'
 import { useAuth } from '../context/AuthContext'
+import profileImage from '../assets/images/profile_image.jpg'
 
 export default function UserProfilePage() {
   const { user, profile, isAdmin, logout } = useAuth()
@@ -28,9 +29,27 @@ export default function UserProfilePage() {
       initial="initial"
       animate="animate"
       exit="exit"
-      className="max-w-xl mx-auto px-4 py-8"
+      style={{ backgroundImage: `url(${profileImage})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+      className="relative min-h-screen"
     >
-      <h2 className="text-3xl font-bold text-white mb-8">הפרופיל שלי</h2>
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-dark-950/75" />
+
+      {/* All content above overlay */}
+      <div className="relative z-10">
+
+      {/* Profile header */}
+      <div className="flex flex-col items-center justify-center pt-16 pb-8 gap-3">
+        <div className="w-16 h-16 rounded-2xl bg-pitch-900 border-2 border-pitch-700 flex items-center justify-center shadow-xl">
+          <User size={28} className="text-pitch-400" />
+        </div>
+        <div className="text-center">
+          <h2 className="text-3xl font-bold text-white drop-shadow-lg">הפרופיל שלי</h2>
+          <p className="text-dark-300 text-sm mt-1">{displayName}</p>
+        </div>
+      </div>
+
+      <div className="max-w-xl mx-auto px-4 pb-8">
 
       {/* Profile card */}
       <motion.div
@@ -41,9 +60,6 @@ export default function UserProfilePage() {
         className="card mb-5"
       >
         <div className="flex items-center gap-4 mb-5">
-          <div className="w-16 h-16 rounded-2xl bg-pitch-900 border border-pitch-800 flex items-center justify-center shrink-0">
-            <User size={28} className="text-pitch-400" />
-          </div>
           <div>
             <p className="text-white font-bold text-xl">{displayName}</p>
             <div className="flex items-center gap-2 mt-1.5">
@@ -113,6 +129,8 @@ export default function UserProfilePage() {
           <LogOut size={16} /> יציאה מהחשבון
         </motion.button>
       </motion.div>
+      </div>
+      </div>
     </motion.div>
   )
 }

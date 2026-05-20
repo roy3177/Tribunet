@@ -123,8 +123,8 @@ export default function StadiumManagementPage() {
       initial="initial"
       animate="animate"
       exit="exit"
-      className="max-w-4xl mx-auto px-4 py-8"
     >
+      <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Header */}
       <motion.div
         variants={fadeIn}
@@ -306,6 +306,7 @@ export default function StadiumManagementPage() {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </motion.div>
   )
 }

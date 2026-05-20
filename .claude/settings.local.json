@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "WebFetch(domain:www.leaan.co.il)",
-      "Bash(xargs grep -l \"map\\\\|Map\")"
+      "Bash(xargs grep -l \"map\\\\|Map\")",
+      "Bash(npm run *)",
+      "Bash(aws s3 *)",
+      "Bash(aws cloudfront *)"
     ]
   }
 }

@@ -5,6 +5,9 @@ import { Map, Ticket, Star, Shield, Trophy, ArrowRight, Zap } from 'lucide-react
 import { useAuth } from '../context/AuthContext'
 import { pageVariants, cardVariants, staggerContainer, fadeIn } from '../animations/variants'
 import { getMatches } from '../services/matchService'
+import homeImage from '../assets/images/home_image.jpg'
+import upcomingImage from '../assets/images/upcoming_games.jpg'
+import downHomeImage from '../assets/images/down_home_page.jpg'
 
 const ISRAELI_LEAGUES = ['ליגת העל', 'הליגה הלאומית', 'הליגה הארצית']
 
@@ -151,11 +154,12 @@ export default function HomePage() {
 
       {/* ── Hero ───────────────────────────────────────────────────────────── */}
       <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden px-4">
-        {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-dark-950 via-dark-900 to-pitch-950/30 pointer-events-none" />
-        {/* Decorative blobs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-pitch-900/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-pitch-800/10 rounded-full blur-3xl pointer-events-none" />
+        {/* Background image */}
+        <div className="absolute inset-0 pointer-events-none">
+          <img src={homeImage} alt="" className="w-full h-full object-cover object-center" />
+          <div className="absolute inset-0 bg-dark-950/60" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-dark-950" />
+        </div>
 
         <div className="relative z-10 text-center max-w-3xl mx-auto">
           {/* Badge */}
@@ -219,7 +223,20 @@ export default function HomePage() {
       </section>
 
       {/* ── Featured Matches ────────────────────────────────────────────────── */}
-      <section ref={matchesRef} className="max-w-7xl mx-auto px-4 py-16">
+      <section ref={matchesRef} className="relative py-16">
+        {/* Background image — reveals on scroll */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: false, margin: '-100px' }}
+          transition={{ duration: 1.2, ease: 'easeOut' }}
+        >
+          <img src={upcomingImage} alt="" className="w-full h-full object-cover object-center" />
+          <div className="absolute inset-0 bg-dark-950/50" />
+          <div className="absolute inset-0 bg-gradient-to-b from-dark-950 via-transparent to-dark-950/70" />
+        </motion.div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4">
         <motion.div
           variants={fadeIn}
           initial="hidden"
@@ -263,10 +280,24 @@ export default function HomePage() {
             ))}
           </motion.div>
         )}
+        </div>
       </section>
 
       {/* ── Features ────────────────────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 py-16 border-t border-dark-800/50">
+      <section className="relative py-16 border-t border-dark-800/50">
+        {/* Background image — reveals on scroll */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: false, margin: '-100px' }}
+          transition={{ duration: 1.2, ease: 'easeOut' }}
+        >
+          <img src={downHomeImage} alt="" className="w-full h-full object-cover object-center" />
+          <div className="absolute inset-0 bg-dark-950/50" />
+          <div className="absolute inset-0 bg-gradient-to-b from-dark-950 via-transparent to-dark-950/70" />
+        </motion.div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -284,6 +315,7 @@ export default function HomePage() {
           {FEATURES.map((f, i) => (
             <FeatureCard key={f.title} feature={f} index={i} />
           ))}
+        </div>
         </div>
       </section>
 
