@@ -194,6 +194,16 @@ Resources:
                   - !GetAtt UsersTable.Arn
                   - !GetAtt TeamsTable.Arn
                   - !GetAtt LeaguesTable.Arn
+        - PolicyName: CognitoAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cognito-idp:AdminDeleteUser
+                  - cognito-idp:AdminGetUser
+                  - cognito-idp:ListUsers
+                Resource: !Sub 'arn:aws:cognito-idp:${AWS::Region}:${AWS::AccountId}:userpool/${CognitoUserPoolId}'
         - PolicyName: SNSPublish
           PolicyDocument:
             Version: '2012-10-17'
@@ -361,6 +371,90 @@ Resources:
           Properties:
             ApiId: !Ref TribunetApi
             Path: /users/{id}
+            Method: DELETE
+
+  # ── Lambda: Teams ─────────────────────────────────────────────────────────────
+  TeamsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: functions.teams.handler.main
+      Role: !GetAtt LambdaRole.Arn
+      Events:
+        GetTeams:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /teams
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        GetTeam:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /teams/{id}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        CreateTeam:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /teams
+            Method: POST
+        UpdateTeam:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /teams/{id}
+            Method: PUT
+        DeleteTeam:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /teams/{id}
+            Method: DELETE
+
+  # ── Lambda: Leagues ───────────────────────────────────────────────────────────
+  LeaguesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: functions.leagues.handler.main
+      Role: !GetAtt LambdaRole.Arn
+      Events:
+        GetLeagues:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /leagues
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        GetLeague:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /leagues/{id}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        CreateLeague:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /leagues
+            Method: POST
+        UpdateLeague:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /leagues/{id}
+            Method: PUT
+        DeleteLeague:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /leagues/{id}
             Method: DELETE
 
   # ── Lambda: Scheduler (EventBridge weekly report) ────────────────────────────

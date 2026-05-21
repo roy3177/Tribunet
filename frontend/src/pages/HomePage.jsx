@@ -1,7 +1,8 @@
 import { useRef, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useInView } from 'framer-motion'
-import { Map, Ticket, Star, Shield, Trophy, ArrowRight, Zap } from 'lucide-react'
+import { Map, Ticket, Star, Shield, ArrowRight, Zap } from 'lucide-react'
+import stadiumIcon from '../assets/stadium-icon.svg'
 import { useAuth } from '../context/AuthContext'
 import { pageVariants, cardVariants, staggerContainer, fadeIn } from '../animations/variants'
 import { getMatches } from '../services/matchService'
@@ -169,18 +170,21 @@ export default function HomePage() {
             transition={{ delay: 0.05, duration: 0.4 }}
             className="inline-flex items-center gap-2 badge-green px-4 py-1.5 text-sm mb-6"
           >
-            <Trophy size={14} /> כדורגל ישראל
+            <img src={stadiumIcon} alt="stadium" className="w-3.5 h-3.5" /> כדורגל ישראל
           </motion.div>
 
           {/* Headline */}
-          <motion.h1
+          <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.12, duration: 0.5, ease: 'easeOut' }}
-            className="text-6xl md:text-8xl font-black text-white leading-none tracking-tight mb-5"
+            className="flex items-center justify-center gap-4 mb-5"
           >
-            Tri<span className="text-pitch-500">bu</span>net
-          </motion.h1>
+            <img src={stadiumIcon} alt="stadium" className="w-16 h-16 md:w-20 md:h-20 drop-shadow-lg" />
+            <h1 className="text-6xl md:text-8xl font-black text-white leading-none tracking-tight">
+              Tri<span className="text-pitch-500">bu</span>net
+            </h1>
+          </motion.div>
 
           <motion.p
             initial={{ opacity: 0 }}

@@ -33,13 +33,17 @@ def main(event, context):
             print(f'[trigger] User already in DynamoDB — skipping')
             return event
 
-    table.put_item(Item={
-        'userId':    user_id,
-        'email':     email,
-        'name':      name,
-        'role':      'user',
-        'createdAt': datetime.now(timezone.utc).isoformat(),
-    })
+    try:
+        table.put_item(Item={
+            'userId':    user_id,
+            'email':     email,
+            'name':      name,
+            'role':      'user',
+            'createdAt': datetime.now(timezone.utc).isoformat(),
+        })
+        print(f'[trigger] Saved to DynamoDB successfully')
+    except Exception as exc:
+        # Log but do not raise — Cognito requires the event returned regardless
+        print(f'[trigger] ERROR writing to DynamoDB for {email}: {exc}')
 
-    print(f'[trigger] Saved to DynamoDB successfully')
     return event  # Cognito requires the event to be returned unchanged

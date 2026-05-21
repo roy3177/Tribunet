@@ -6,7 +6,8 @@ import {
   Ticket, RefreshCw, AlertCircle,
 } from 'lucide-react'
 import { pageVariants, cardVariants, staggerContainer, fadeIn } from '../animations/variants'
-import { getMatches, deleteMatch, getStadiums } from '../services/matchService'
+import { getMatches, deleteMatch, getStadiums, getUsers } from '../services/matchService'
+import adminBg from '../assets/images/admin_page.webp'
 
 const USE_MOCK = !import.meta.env.VITE_API_URL
 
@@ -24,6 +25,7 @@ export default function AdminDashboard() {
 
   const [matches,       setMatches]       = useState([])
   const [stadiumsCount, setStadiumsCount] = useState(0)
+  const [usersCount,    setUsersCount]    = useState('—')
   const [loading,       setLoading]       = useState(true)
 
   const load = useCallback(async () => {
@@ -33,9 +35,10 @@ export default function AdminDashboard() {
         setMatches(MOCK_MATCHES)
         setStadiumsCount(6)
       } else {
-        const [matchData, stadiumData] = await Promise.all([getMatches(), getStadiums()])
+        const [matchData, stadiumData, userData] = await Promise.all([getMatches(), getStadiums(), getUsers()])
         setMatches(matchData)
         setStadiumsCount(stadiumData.length)
+        setUsersCount(userData.length)
       }
     } catch (err) {
       console.error(err)
@@ -59,17 +62,24 @@ export default function AdminDashboard() {
   const statCards = [
     { label: 'משחקים',    value: matches.length, icon: Trophy, color: 'text-pitch-400',  bg: 'bg-pitch-900/50'    },
     { label: 'אצטדיונים', value: stadiumsCount,  icon: MapPin, color: 'text-blue-400',   bg: 'bg-blue-900/30'     },
-    { label: 'משתמשים',   value: '—',            icon: Users,  color: 'text-purple-400', bg: 'bg-purple-900/30'   },
+    { label: 'משתמשים',   value: usersCount,     icon: Users,  color: 'text-purple-400', bg: 'bg-purple-900/30'   },
     { label: 'מועדפים',   value: '—',            icon: Heart,  color: 'text-yellow-400', bg: 'bg-yellow-900/30'   },
   ]
 
   return (
+    <div className="relative min-h-screen">
+      {/* Background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <img src={adminBg} alt="" className="w-full h-full object-cover object-center" />
+        <div className="absolute inset-0 bg-dark-950/85" />
+      </div>
+
     <motion.div
       variants={pageVariants}
       initial="initial"
       animate="animate"
       exit="exit"
-      className="max-w-7xl mx-auto px-4 py-8"
+      className="relative z-10 max-w-7xl mx-auto px-4 py-8"
     >
       {/* Header */}
       <motion.div
@@ -134,6 +144,9 @@ export default function AdminDashboard() {
       >
         <Link to="/admin/stadiums" className="btn-secondary flex items-center gap-2 text-sm">
           <MapPin size={15} /> ניהול אצטדיונים
+        </Link>
+        <Link to="/admin/users" className="btn-secondary flex items-center gap-2 text-sm">
+          <Users size={15} /> ניהול משתמשים
         </Link>
       </motion.div>
 
@@ -226,5 +239,6 @@ export default function AdminDashboard() {
         )}
       </motion.div>
     </motion.div>
+    </div>
   )
 }

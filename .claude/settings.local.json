@@ -5,7 +5,8 @@
       "Bash(xargs grep -l \"map\\\\|Map\")",
       "Bash(npm run *)",
       "Bash(aws s3 *)",
-      "Bash(aws cloudfront *)"
+      "Bash(aws cloudfront *)",
+      "PowerShell(Write-Output \"=== INFRASTRUCTURE STRUCTURE ===\"; Get-ChildItem -Path \"C:\\\\Users\\\\royme\\\\Desktop\\\\Tribunet Project\\\\infrastructure\" -Recurse | Select-Object -ExpandProperty FullName | Sort-Object | ForEach-Object { $_ -replace [regex]::Escape\\(\"C:\\\\Users\\\\royme\\\\Desktop\\\\Tribunet Project\\\\infrastructure\"\\), \".\" })"
     ]
   }
 }

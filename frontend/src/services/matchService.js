@@ -64,6 +64,31 @@ export async function deleteStadium(id) {
   await api.delete(`/stadiums/${id}`)
 }
 
+// ── Teams ─────────────────────────────────────────────────────────────────────
+
+export async function getTeams() {
+  const { data } = await api.get('/teams')
+  return data.data ?? []
+}
+
+// ── Leagues ───────────────────────────────────────────────────────────────────
+
+export async function getLeagues() {
+  const { data } = await api.get('/leagues')
+  return data.data ?? []
+}
+
+// ── Users ─────────────────────────────────────────────────────────────────────
+
+export async function getUsers() {
+  const { data } = await api.get('/users')
+  return data.data ?? []
+}
+
+export async function deleteUser(id) {
+  await api.delete(`/users/${id}`)
+}
+
 // ── Favorites ────────────────────────────────────────────────────────────────
 
 export async function getFavorites() {

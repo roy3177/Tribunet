@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ArrowLeft, Save, Loader2 } from 'lucide-react'
 import { pageVariants, cardVariants, fadeIn } from '../animations/variants'
-import { getMatch, createMatch, updateMatch, getStadiums } from '../services/matchService'
+import { getMatch, createMatch, updateMatch, getStadiums, getTeams, getLeagues } from '../services/matchService'
 
 const USE_MOCK = !import.meta.env.VITE_API_URL
 
@@ -20,8 +20,6 @@ const MOCK_MATCHES = {
   '1': { homeTeam: 'מכבי תל אביב', awayTeam: 'הפועל באר שבע', date: '2026-05-14', time: '20:00', stadiumId: 's1', league: 'ליגת העל', hasTickets: true,  ticketUrl: 'https://www.maccabi-tlv.co.il' },
   '2': { homeTeam: 'מכבי חיפה',    awayTeam: "בית\"ר ירושלים",  date: '2026-05-15', time: '19:00', stadiumId: 's2', league: 'ליגת העל', hasTickets: true,  ticketUrl: '' },
 }
-
-const LEAGUES = ['ליגת העל', 'ליגה לאומית', 'גביע המדינה', 'ליגת האלופות']
 
 const EMPTY_FORM = {
   homeTeam: '', awayTeam: '', date: '', time: '',
@@ -45,6 +43,8 @@ export default function AddEditMatchPage() {
 
   const [form,     setForm]     = useState(EMPTY_FORM)
   const [stadiums, setStadiums] = useState([])
+  const [teams,    setTeams]    = useState([])
+  const [leagues,  setLeagues]  = useState([])
   const [loading,  setLoading]  = useState(isEdit)
   const [saving,   setSaving]   = useState(false)
   const [errors,   setErrors]   = useState({})
@@ -52,8 +52,14 @@ export default function AddEditMatchPage() {
   useEffect(() => {
     async function load() {
       try {
-        const stadiumData = USE_MOCK ? MOCK_STADIUMS : await getStadiums()
+        const [stadiumData, teamData, leagueData] = await Promise.all([
+          USE_MOCK ? Promise.resolve(MOCK_STADIUMS) : getStadiums(),
+          USE_MOCK ? Promise.resolve([]) : getTeams(),
+          USE_MOCK ? Promise.resolve([]) : getLeagues(),
+        ])
         setStadiums(stadiumData)
+        setTeams(teamData)
+        setLeagues(leagueData)
 
         if (isEdit) {
           const match = USE_MOCK ? (MOCK_MATCHES[id] ?? EMPTY_FORM) : await getMatch(id)
@@ -155,22 +161,28 @@ export default function AddEditMatchPage() {
           {/* Teams */}
           <div className="grid grid-cols-2 gap-4">
             <Field label="קבוצת בית" error={errors.homeTeam}>
-              <input
-                type="text"
+              <select
                 value={form.homeTeam}
                 onChange={(e) => set('homeTeam', e.target.value)}
-                placeholder="מכבי תל אביב"
                 className="input-field"
-              />
+              >
+                <option value="">בחר קבוצת בית...</option>
+                {teams.map((t) => (
+                  <option key={t.teamId} value={t.name}>{t.name}</option>
+                ))}
+              </select>
             </Field>
             <Field label="קבוצת חוץ" error={errors.awayTeam}>
-              <input
-                type="text"
+              <select
                 value={form.awayTeam}
                 onChange={(e) => set('awayTeam', e.target.value)}
-                placeholder="הפועל באר שבע"
                 className="input-field"
-              />
+              >
+                <option value="">בחר קבוצת חוץ...</option>
+                {teams.map((t) => (
+                  <option key={t.teamId} value={t.name}>{t.name}</option>
+                ))}
+              </select>
             </Field>
           </div>
 
@@ -216,8 +228,8 @@ export default function AddEditMatchPage() {
               className="input-field"
             >
               <option value="">בחר ליגה...</option>
-              {LEAGUES.map((l) => (
-                <option key={l} value={l}>{l}</option>
+              {leagues.map((l) => (
+                <option key={l.leagueId} value={l.name}>{l.name}</option>
               ))}
             </select>
           </Field>

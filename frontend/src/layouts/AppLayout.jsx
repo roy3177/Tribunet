@@ -1,6 +1,7 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Trophy, Map, Heart, User, Shield, LogOut, LogIn } from 'lucide-react'
+import { Map, Heart, User, Shield, LogOut, LogIn } from 'lucide-react'
+import stadiumIcon from '../assets/stadium-icon.svg'
 import { useAuth } from '../context/AuthContext'
 
 function NavItem({ to, icon: Icon, label }) {
@@ -42,7 +43,7 @@ export default function AppLayout() {
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
           {/* Logo */}
           <NavLink to="/" className="flex items-center gap-2 shrink-0">
-            <Trophy size={22} className="text-pitch-500" />
+            <img src={stadiumIcon} alt="stadium" className="w-6 h-6" />
             <span className="text-white font-bold text-lg tracking-tight">
               Tri<span className="text-pitch-500">bu</span>net
             </span>

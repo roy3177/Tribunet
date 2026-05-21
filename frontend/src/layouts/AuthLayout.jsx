@@ -1,7 +1,7 @@
 import { Outlet, NavLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Trophy } from 'lucide-react'
 import loginBg from '../assets/images/login_image.jpg'
+import stadiumIcon from '../assets/stadium-icon.svg'
 
 export default function AuthLayout() {
   return (
@@ -19,7 +19,7 @@ export default function AuthLayout() {
         className="relative z-10 mb-8"
       >
         <NavLink to="/" className="flex items-center gap-2 justify-center">
-          <Trophy size={28} className="text-pitch-500" />
+          <img src={stadiumIcon} alt="stadium" className="w-7 h-7" />
           <span className="text-white font-bold text-2xl tracking-tight">
             Tri<span className="text-pitch-500">bu</span>net
           </span>

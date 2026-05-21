@@ -15,6 +15,7 @@ import UserProfilePage from './pages/UserProfilePage'
 import AdminDashboard from './pages/AdminDashboard'
 import AddEditMatchPage from './pages/AddEditMatchPage'
 import StadiumManagementPage from './pages/StadiumManagementPage'
+import UserManagementPage from './pages/UserManagementPage'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -117,6 +118,14 @@ function AnimatedRoutes() {
             element={
               <AdminRoute>
                 <StadiumManagementPage />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <AdminRoute>
+                <UserManagementPage />
               </AdminRoute>
             }
           />

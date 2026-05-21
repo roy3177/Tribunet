@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Heart, Ticket, ArrowRight, Trash2, Map } from 'lucide-react'
 import { pageVariants, cardVariants, staggerContainer, fadeIn } from '../animations/variants'
 import { getFavorites, removeFavorite } from '../services/matchService'
+import favBg from '../assets/images/favourite_page.webp'
 
 const USE_MOCK = !import.meta.env.VITE_API_URL
 
@@ -40,11 +41,19 @@ export default function FavoritesPage() {
   }
 
   return (
+    <div className="relative min-h-screen">
+      {/* Background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <img src={favBg} alt="" className="w-full h-full object-cover object-center" />
+        <div className="absolute inset-0 bg-black/80" />
+      </div>
+
     <motion.div
       variants={pageVariants}
       initial="initial"
       animate="animate"
       exit="exit"
+      className="relative z-10"
     >
       <div className="max-w-4xl mx-auto px-4 py-8">
       {/* Header */}
@@ -152,5 +161,6 @@ export default function FavoritesPage() {
       )}
       </div>
     </motion.div>
+    </div>
   )
 }
