@@ -31,7 +31,7 @@ function Field({ label, error, children }) {
 export default function StadiumManagementPage() {
   const [stadiums, setStadiums] = useState([])
   const [loading,  setLoading]  = useState(true)
-  const [modal,    setModal]    = useState(null) // null | { mode: 'add' | 'edit', stadium?: {} }
+  const [modal,    setModal]    = useState(null)
   const [form,     setFormState] = useState(EMPTY_FORM)
   const [saving,   setSaving]   = useState(false)
   const [errors,   setErrors]   = useState({})
@@ -118,195 +118,174 @@ export default function StadiumManagementPage() {
   }
 
   return (
-    <motion.div
-      variants={pageVariants}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-    >
-      <div className="max-w-4xl mx-auto px-4 py-8">
-      {/* Header */}
+    <div className="relative min-h-screen">
+      {/* Background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <img
+          src="https://tribunet-frontend-prod.s3.us-east-1.amazonaws.com/assets/stadiums_management_img.jpg"
+          alt=""
+          className="w-full h-full object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-dark-950/85" />
+      </div>
+
       <motion.div
-        variants={fadeIn}
-        initial="hidden"
-        animate="visible"
-        className="flex items-center justify-between mb-8"
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        className="relative z-10"
       >
-        <div>
-          <Link
-            to="/admin"
-            className="flex items-center gap-1.5 text-dark-400 hover:text-white transition-colors text-sm mb-2"
-          >
-            <ArrowLeft size={14} /> חזרה לניהול
-          </Link>
-          <h2 className="text-3xl font-bold text-white flex items-center gap-3">
-            <MapPin size={28} className="text-pitch-400" />
-            ניהול אצטדיונים
-          </h2>
-          <p className="text-dark-400 text-sm mt-1">
-            {loading ? '...' : `${stadiums.length} אצטדיונים במערכת`}
-          </p>
-        </div>
-        <motion.button
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-          onClick={openAdd}
-          className="btn-primary flex items-center gap-2 text-sm"
-        >
-          <Plus size={16} /> הוסף אצטדיון
-        </motion.button>
-      </motion.div>
-
-      {/* Grid */}
-      {loading ? (
-        <div className="flex justify-center py-16">
-          <div className="w-8 h-8 border-2 border-pitch-500 border-t-transparent rounded-full animate-spin" />
-        </div>
-      ) : (
-        <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          animate="visible"
-          className="grid sm:grid-cols-2 gap-4"
-        >
-          {stadiums.map((s, i) => (
-            <motion.div
-              key={s.stadiumId}
-              variants={cardVariants}
-              custom={i}
-              className="card flex items-center justify-between gap-3"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-pitch-900/50 flex items-center justify-center shrink-0">
-                  <MapPin size={18} className="text-pitch-400" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-white font-semibold truncate">{s.name}</p>
-                  <p className="text-dark-500 text-xs">{s.city} · {s.lat}, {s.lng}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 shrink-0">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => openEdit(s)}
-                  className="p-2 rounded-lg text-dark-400 hover:text-white hover:bg-dark-800 transition-colors"
-                >
-                  <Pencil size={14} />
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => handleDelete(s.stadiumId)}
-                  className="p-2 rounded-lg text-dark-400 hover:text-red-400 hover:bg-red-900/20 transition-colors"
-                >
-                  <Trash2 size={14} />
-                </motion.button>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
-      )}
-
-      {/* Add / Edit Modal */}
-      <AnimatePresence>
-        {modal && (
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          {/* Header */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-dark-950/80 backdrop-blur-sm flex items-center justify-center p-4"
-            onClick={() => setModal(null)}
+            variants={fadeIn}
+            initial="hidden"
+            animate="visible"
+            className="flex items-center justify-between mb-8"
           >
+            <div>
+              <Link
+                to="/admin"
+                className="flex items-center gap-1.5 text-dark-400 hover:text-white transition-colors text-sm mb-2"
+              >
+                <ArrowLeft size={14} /> חזרה לניהול
+              </Link>
+              <h2 className="text-3xl font-bold text-white flex items-center gap-3">
+                <MapPin size={28} className="text-pitch-400" />
+                ניהול אצטדיונים
+              </h2>
+              <p className="text-dark-400 text-sm mt-1">
+                {loading ? '...' : `${stadiums.length} אצטדיונים במערכת`}
+              </p>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={openAdd}
+              className="btn-primary flex items-center gap-2 text-sm"
+            >
+              <Plus size={16} /> הוסף אצטדיון
+            </motion.button>
+          </motion.div>
+
+          {/* Grid */}
+          {loading ? (
+            <div className="flex justify-center py-16">
+              <div className="w-8 h-8 border-2 border-pitch-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
             <motion.div
-              variants={modalVariants}
+              variants={staggerContainer}
               initial="hidden"
               animate="visible"
-              exit="exit"
-              onClick={(e) => e.stopPropagation()}
-              className="card w-full max-w-md"
+              className="grid sm:grid-cols-2 gap-4"
             >
-              {/* Modal header */}
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="text-white font-bold text-lg">
-                  {modal.mode === 'add' ? 'הוספת אצטדיון' : 'עריכת אצטדיון'}
-                </h3>
-                <button
-                  onClick={() => setModal(null)}
-                  className="p-1.5 rounded-lg text-dark-400 hover:text-white hover:bg-dark-800 transition-colors"
+              {stadiums.map((s, i) => (
+                <motion.div
+                  key={s.stadiumId}
+                  variants={cardVariants}
+                  custom={i}
+                  className="card flex items-center justify-between gap-3"
                 >
-                  <X size={16} />
-                </button>
-              </div>
-
-              {/* Fields */}
-              <div className="flex flex-col gap-4">
-                <Field label="שם האצטדיון" error={errors.name}>
-                  <input
-                    type="text"
-                    value={form.name}
-                    onChange={(e) => set('name', e.target.value)}
-                    placeholder="בלומפילד"
-                    className="input-field"
-                  />
-                </Field>
-                <Field label="עיר" error={errors.city}>
-                  <input
-                    type="text"
-                    value={form.city}
-                    onChange={(e) => set('city', e.target.value)}
-                    placeholder="תל אביב"
-                    className="input-field"
-                  />
-                </Field>
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="קו רוחב (lat)" error={errors.lat}>
-                    <input
-                      type="number"
-                      step="0.001"
-                      value={form.lat}
-                      onChange={(e) => set('lat', e.target.value)}
-                      placeholder="32.057"
-                      className="input-field"
-                    />
-                  </Field>
-                  <Field label="קו אורך (lng)" error={errors.lng}>
-                    <input
-                      type="number"
-                      step="0.001"
-                      value={form.lng}
-                      onChange={(e) => set('lng', e.target.value)}
-                      placeholder="34.768"
-                      className="input-field"
-                    />
-                  </Field>
-                </div>
-              </div>
-
-              {/* Modal buttons */}
-              <div className="flex gap-3 mt-6">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="btn-primary flex items-center gap-2 flex-1 justify-center"
-                >
-                  {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
-                  שמור
-                </motion.button>
-                <button
-                  onClick={() => setModal(null)}
-                  className="btn-secondary px-5"
-                >
-                  ביטול
-                </button>
-              </div>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 rounded-xl bg-pitch-900/50 flex items-center justify-center shrink-0">
+                      <MapPin size={18} className="text-pitch-400" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-white font-semibold truncate">{s.name}</p>
+                      <p className="text-dark-500 text-xs">{s.city} · {s.lat}, {s.lng}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => openEdit(s)}
+                      className="p-2 rounded-lg text-dark-400 hover:text-white hover:bg-dark-800 transition-colors"
+                    >
+                      <Pencil size={14} />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleDelete(s.stadiumId)}
+                      className="p-2 rounded-lg text-dark-400 hover:text-red-400 hover:bg-red-900/20 transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </motion.button>
+                  </div>
+                </motion.div>
+              ))}
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-      </div>
-    </motion.div>
+          )}
+
+          {/* Add / Edit Modal */}
+          <AnimatePresence>
+            {modal && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-50 bg-dark-950/80 backdrop-blur-sm flex items-center justify-center p-4"
+                onClick={() => setModal(null)}
+              >
+                <motion.div
+                  variants={modalVariants}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  onClick={(e) => e.stopPropagation()}
+                  className="card w-full max-w-md"
+                >
+                  <div className="flex items-center justify-between mb-5">
+                    <h3 className="text-white font-bold text-lg">
+                      {modal.mode === 'add' ? 'הוספת אצטדיון' : 'עריכת אצטדיון'}
+                    </h3>
+                    <button
+                      onClick={() => setModal(null)}
+                      className="p-1.5 rounded-lg text-dark-400 hover:text-white hover:bg-dark-800 transition-colors"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col gap-4">
+                    <Field label="שם האצטדיון" error={errors.name}>
+                      <input type="text" value={form.name} onChange={(e) => set('name', e.target.value)} placeholder="בלומפילד" className="input-field" />
+                    </Field>
+                    <Field label="עיר" error={errors.city}>
+                      <input type="text" value={form.city} onChange={(e) => set('city', e.target.value)} placeholder="תל אביב" className="input-field" />
+                    </Field>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Field label="קו רוחב (lat)" error={errors.lat}>
+                        <input type="number" step="0.001" value={form.lat} onChange={(e) => set('lat', e.target.value)} placeholder="32.057" className="input-field" />
+                      </Field>
+                      <Field label="קו אורך (lng)" error={errors.lng}>
+                        <input type="number" step="0.001" value={form.lng} onChange={(e) => set('lng', e.target.value)} placeholder="34.768" className="input-field" />
+                      </Field>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 mt-6">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleSave}
+                      disabled={saving}
+                      className="btn-primary flex items-center gap-2 flex-1 justify-center"
+                    >
+                      {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
+                      שמור
+                    </motion.button>
+                    <button onClick={() => setModal(null)} className="btn-secondary px-5">ביטול</button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </motion.div>
+    </div>
   )
 }
