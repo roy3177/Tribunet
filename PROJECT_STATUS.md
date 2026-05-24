@@ -1,5 +1,5 @@
 # TRIBUNET PROJECT — FULL STATUS REPORT
-**Date:** May 21, 2026 (last updated: May 21, 2026)
+**Date:** May 21, 2026 (last updated: May 24, 2026)
 **Project:** Tribunet — Serverless Football Match Platform (Israel)
 **Stack:** React + Vite | Python Lambda | AWS Serverless
 **CloudFront URL:** https://d3qx6x8ydteha.cloudfront.net
@@ -22,7 +22,7 @@
 
 > **The project is fully deployed to AWS and live.**
 > CloudFormation stack `tribunet-prod` status: **UPDATE_COMPLETE**
-> Stack created: May 13 2026 | Last updated: May 17 2026
+> Stack created: May 13 2026 | Last updated: May 24 2026
 
 ### Services Live on AWS
 
@@ -44,14 +44,14 @@
 
 | Function | Runtime | Memory | Timeout | Last Deploy |
 |---|---|---|---|---|
-| `tribunet-prod-MatchesFunction-zZVOugiXoueO` | Python 3.13 | 256MB | 15s | May 17 2026 |
-| `tribunet-prod-StadiumsFunction-zFUGxOhAn8at` | Python 3.13 | 256MB | 15s | May 17 2026 |
-| `tribunet-prod-FavoritesFunction-qDIrJ9d6DCHn` | Python 3.13 | 256MB | 15s | May 17 2026 |
-| `tribunet-prod-UsersFunction-cdcuOOvqCsDp` | Python 3.13 | 256MB | 15s | May 17 2026 |
+| `tribunet-prod-MatchesFunction-zZVOugiXoueO` | Python 3.13 | 256MB | 15s | May 24 2026 |
+| `tribunet-prod-StadiumsFunction-zFUGxOhAn8at` | Python 3.13 | 256MB | 15s | May 24 2026 |
+| `tribunet-prod-FavoritesFunction-qDIrJ9d6DCHn` | Python 3.13 | 256MB | 15s | May 24 2026 |
+| `tribunet-prod-UsersFunction-cdcuOOvqCsDp` | Python 3.13 | 256MB | 15s | May 24 2026 |
 | `tribunet-prod-CognitoTriggerFunction-1Mjdq6C6QaVJ` | Python 3.13 | 256MB | 15s | May 17 2026 |
 | `tribunet-prod-SchedulerFunction-NaPjrfxJpeau` | Python 3.13 | 256MB | 15s | May 17 2026 |
-| `tribunet-prod-TeamsFunction-*` | Python 3.13 | 256MB | 15s | May 21 2026 |
-| `tribunet-prod-LeaguesFunction-*` | Python 3.13 | 256MB | 15s | May 21 2026 |
+| `tribunet-prod-TeamsFunction-rDOpmXrw7Fgn` | Python 3.13 | 256MB | 15s | May 21 2026 |
+| `tribunet-prod-LeaguesFunction-9gJvE4EDVcCu` | Python 3.13 | 256MB | 15s | May 21 2026 |
 
 ### Cognito
 - User Pool ID: `us-east-1_kcOTW3PmY`
@@ -188,7 +188,7 @@ Framer Motion variants: `fadeIn`, `slideInLeft`, `slideInRight`, `slideUp`, `sta
 
 ---
 
-### Lambda Functions (6 / 8 Built — Teams & Leagues missing)
+### Lambda Functions (8 / 8 Built — All Complete ✓)
 
 #### 1. Matches (`backend/functions/matches/handler.py`)
 | Method | Path | Auth |
@@ -275,7 +275,7 @@ Framer Motion variants: `fadeIn`, `slideInLeft`, `slideInRight`, `slideUp`, `sta
 |---|---|---|
 | `tribunet-matches-prod` | **11** | Real match data seeded |
 | `tribunet-stadiums-prod` | **33** | 33 Israeli stadiums seeded |
-| `tribunet-users-prod` | **5** | 5 users in DB — Cognito has 9 (4 users missing from DynamoDB — sync issue) |
+| `tribunet-users-prod` | **9** | All Cognito users synced to DynamoDB ✓ |
 | `tribunet-favorites-prod` | Unknown | Not checked |
 | `tribunet-teams-prod` | **26** | 26 Israeli teams seeded (14 ליגת העל, 12 ליגה לאומית) |
 | `tribunet-leagues-prod` | **7** | 7 leagues seeded (ליגת העל, ליגה לאומית, ליגה א', ליגה ב', גביע המדינה, גביע הטוטו, גביע ליגת העל) |
@@ -316,7 +316,7 @@ Framer Motion variants: `fadeIn`, `slideInLeft`, `slideInRight`, `slideUp`, `sta
 | ~~B1~~ | ~~Teams API~~ | **DONE** — Full CRUD, 26 teams seeded, live on AWS |
 | ~~B2~~ | ~~Leagues API~~ | **DONE** — Full CRUD, 7 leagues seeded, live on AWS |
 | ~~B3~~ | ~~Fix DynamoDB user sync issue~~ | **DONE** — Sync script run, trigger hardened, IAM fixed |
-| B4 | **Input validation** — No request body validation in any Lambda function | Production quality |
+| ~~B4~~ | ~~Input validation~~ | **DONE** — Validation added to matches, stadiums, favorites, users handlers |
 
 #### Important (Should Have)
 | # | Item | Reason |
@@ -362,7 +362,7 @@ Framer Motion variants: `fadeIn`, `slideInLeft`, `slideInRight`, `slideUp`, `sta
 6. ~~**F7**~~ — **DONE** Dropdowns wired to real API data
 
 ### Phase 3 — Quality & Robustness
-7. **B4** — Add input validation to all Lambda functions
+7. ~~**B4**~~ — **DONE** Input validation added and deployed to AWS
 8. **F2** — Add 404 page
 9. **F3** — Add loading skeletons
 10. **F4** — Add error boundary
@@ -410,4 +410,4 @@ Framer Motion variants: `fadeIn`, `slideInLeft`, `slideInRight`, `slideUp`, `sta
 | **Documentation** | 0 / 9 | Nothing written yet |
 | **Tests** | 0% | No tests anywhere |
 
-**Phases 1 and 2 are fully complete. All 8 Lambda functions are live. All data tables are seeded. The main remaining work is: (1) adding more matches (B6), (2) frontend quality features (F1–F6, F8–F10), (3) backend validation (B4), and (4) academic documentation (D1–D9).**
+**Phases 1, 2, and B4 are fully complete. All 8 Lambda functions are live with input validation. All data tables are seeded. The main remaining work is: (1) adding more matches (B6), (2) frontend quality features (F1–F6, F8–F10), and (3) academic documentation (D1–D9).**
