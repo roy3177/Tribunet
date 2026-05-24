@@ -7,6 +7,8 @@ import {
 } from 'lucide-react'
 import { pageVariants, cardVariants, staggerContainer, fadeIn } from '../animations/variants'
 import { getMatches, deleteMatch, getStadiums, getUsers } from '../services/matchService'
+import { useToast } from '../context/ToastContext'
+import ConfirmDialog from '../components/ConfirmDialog'
 import adminBg from '../assets/images/admin_page.webp'
 
 const USE_MOCK = !import.meta.env.VITE_API_URL
@@ -22,11 +24,13 @@ const MOCK_MATCHES = [
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
+  const toast = useToast()
 
   const [matches,       setMatches]       = useState([])
   const [stadiumsCount, setStadiumsCount] = useState(0)
   const [usersCount,    setUsersCount]    = useState('—')
   const [loading,       setLoading]       = useState(true)
+  const [confirmId,     setConfirmId]     = useState(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -50,12 +54,15 @@ export default function AdminDashboard() {
   useEffect(() => { load() }, [load])
 
   async function handleDelete(matchId) {
-    if (!window.confirm('האם אתה בטוח שברצונך למחוק משחק זה?')) return
     try {
       if (!USE_MOCK) await deleteMatch(matchId)
       setMatches((prev) => prev.filter((m) => m.matchId !== matchId))
+      toast.success('המשחק נמחק בהצלחה')
     } catch (err) {
       console.error(err)
+      toast.error('שגיאה במחיקת המשחק')
+    } finally {
+      setConfirmId(null)
     }
   }
 
@@ -223,7 +230,7 @@ export default function AdminDashboard() {
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => handleDelete(match.matchId)}
+                            onClick={() => setConfirmId(match.matchId)}
                             className="p-1.5 rounded-lg text-dark-400 hover:text-red-400 hover:bg-red-900/20 transition-colors"
                           >
                             <Trash2 size={14} />
@@ -239,6 +246,14 @@ export default function AdminDashboard() {
         )}
       </motion.div>
     </motion.div>
+
+    <ConfirmDialog
+      open={!!confirmId}
+      title="מחיקת משחק"
+      message="האם אתה בטוח שברצונך למחוק משחק זה? לא ניתן לשחזר פעולה זו."
+      onConfirm={() => handleDelete(confirmId)}
+      onCancel={() => setConfirmId(null)}
+    />
     </div>
   )
 }

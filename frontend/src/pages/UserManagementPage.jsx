@@ -5,12 +5,16 @@ import { Users, Trash2, AlertCircle, ArrowRight, RefreshCw, ShieldCheck, User } 
 import { pageVariants, cardVariants, staggerContainer, fadeIn } from '../animations/variants'
 import { getUsers, deleteUser } from '../services/matchService'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
+import ConfirmDialog from '../components/ConfirmDialog'
 
 export default function UserManagementPage() {
   const { profile } = useAuth()
-  const [users,   setUsers]   = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error,   setError]   = useState(null)
+  const toast = useToast()
+  const [users,        setUsers]        = useState([])
+  const [loading,      setLoading]      = useState(true)
+  const [error,        setError]        = useState(null)
+  const [confirmUser,  setConfirmUser]  = useState(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -29,13 +33,15 @@ export default function UserManagementPage() {
   useEffect(() => { load() }, [load])
 
   async function handleDelete(user) {
-    if (!window.confirm(`האם אתה בטוח שברצונך למחוק את ${user.name || user.email}?\nהפעולה תמחק את המשתמש גם מ-Cognito וגם מהמסד נתונים.`)) return
     try {
       await deleteUser(user.userId)
       setUsers((prev) => prev.filter((u) => u.userId !== user.userId))
+      toast.success('המשתמש נמחק בהצלחה')
     } catch (err) {
       console.error(err)
-      alert('שגיאה במחיקת המשתמש')
+      toast.error('שגיאה במחיקת המשתמש')
+    } finally {
+      setConfirmUser(null)
     }
   }
 
@@ -178,7 +184,7 @@ export default function UserManagementPage() {
                             <motion.button
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
-                              onClick={() => handleDelete(u)}
+                              onClick={() => setConfirmUser(u)}
                               disabled={isSelf || isAdmin}
                               title={isSelf ? 'לא ניתן למחוק את עצמך' : isAdmin ? 'לא ניתן למחוק אדמין' : 'מחק משתמש'}
                               className="p-1.5 rounded-lg text-dark-400 hover:text-red-400 hover:bg-red-900/20 transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-dark-400 disabled:hover:bg-transparent"
@@ -196,6 +202,14 @@ export default function UserManagementPage() {
           )}
         </motion.div>
       </motion.div>
+
+      <ConfirmDialog
+        open={!!confirmUser}
+        title="מחיקת משתמש"
+        message={`האם אתה בטוח שברצונך למחוק את ${confirmUser?.name || confirmUser?.email}? הפעולה תמחק את המשתמש גם מ-Cognito וגם מהמסד נתונים.`}
+        onConfirm={() => handleDelete(confirmUser)}
+        onCancel={() => setConfirmUser(null)}
+      />
     </div>
   )
 }

@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { ToastProvider } from './context/ToastContext'
+import Toast from './components/Toast'
 
 import AppLayout from './layouts/AppLayout'
 import AuthLayout from './layouts/AuthLayout'
@@ -16,6 +18,7 @@ import AdminDashboard from './pages/AdminDashboard'
 import AddEditMatchPage from './pages/AddEditMatchPage'
 import StadiumManagementPage from './pages/StadiumManagementPage'
 import UserManagementPage from './pages/UserManagementPage'
+import NotFoundPage from './pages/NotFoundPage'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -131,8 +134,8 @@ function AnimatedRoutes() {
           />
         </Route>
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* 404 */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </AnimatePresence>
   )
@@ -142,7 +145,10 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AnimatedRoutes />
+        <ToastProvider>
+          <AnimatedRoutes />
+          <Toast />
+        </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
   )

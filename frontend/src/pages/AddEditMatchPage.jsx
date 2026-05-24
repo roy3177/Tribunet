@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { ArrowLeft, Save, Loader2 } from 'lucide-react'
 import { pageVariants, cardVariants, fadeIn } from '../animations/variants'
 import { getMatch, createMatch, updateMatch, getStadiums, getTeams, getLeagues } from '../services/matchService'
+import { useToast } from '../context/ToastContext'
 
 const USE_MOCK = !import.meta.env.VITE_API_URL
 
@@ -40,6 +41,7 @@ export default function AddEditMatchPage() {
   const { id }   = useParams()
   const navigate = useNavigate()
   const isEdit   = Boolean(id)
+  const toast    = useToast()
 
   const [form,     setForm]     = useState(EMPTY_FORM)
   const [stadiums, setStadiums] = useState([])
@@ -110,9 +112,11 @@ export default function AddEditMatchPage() {
         if (isEdit) await updateMatch(id, form)
         else        await createMatch(form)
       }
+      toast.success(isEdit ? 'המשחק עודכן בהצלחה' : 'המשחק נוצר בהצלחה')
       navigate('/admin')
     } catch (err) {
       console.error(err)
+      toast.error('שגיאה בשמירת המשחק')
     } finally {
       setSaving(false)
     }

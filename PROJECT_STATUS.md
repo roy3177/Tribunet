@@ -292,15 +292,15 @@ Framer Motion variants: `fadeIn`, `slideInLeft`, `slideInRight`, `slideUp`, `sta
 | # | Item | Reason |
 |---|---|---|
 | F1 | **Search bar on MapPage** — Free-text search across team names / match descriptions missing from filter sidebar | Required by project spec |
-| F2 | **404 Page** — No dedicated 404 page; unknown URLs silently redirect to home (`/`) instead of showing an error | Basic production requirement |
+| ~~F2~~ | ~~404 Page~~ | **DONE** — Styled Hebrew 404 page with "חזרה לדף הבית" button |
 | F3 | **Loading skeletons** — MapPage has a spinner overlay and error banner. MatchDetailsPage and FavoritesPage have no loading or error states at all | UX quality |
 | F4 | **Error boundary** — No global error boundary wrapping the app | Production requirement |
 
 #### Important (Should Have)
 | # | Item | Reason |
 |---|---|---|
-| F5 | **Toast notifications** (success/error) for admin CRUD actions | User gets no feedback after create/delete |
-| F6 | **Confirm dialogs** for delete actions (matches, stadiums, users) | Prevent accidental deletions |
+| ~~F5~~ | ~~Toast notifications~~ | **DONE** — Success/error toasts on all admin CRUD actions |
+| ~~F6~~ | ~~Confirm dialogs~~ | **DONE** — Styled modal replaces window.confirm() on all delete actions |
 | ~~F7~~ | ~~Hardcoded Leagues dropdown~~ | **DONE** — Dropdowns load from /teams and /leagues APIs |
 | F8 | **Responsive mobile layout** — Map and admin dashboard need mobile testing | Real-world UX |
 | F9 | **Pagination** on AdminDashboard match/stadium lists | Won't scale with real data |
@@ -366,8 +366,8 @@ Framer Motion variants: `fadeIn`, `slideInLeft`, `slideInRight`, `slideUp`, `sta
 8. **F2** — Add 404 page
 9. **F3** — Add loading skeletons
 10. **F4** — Add error boundary
-11. **F5** — Add toast notifications
-12. **F6** — Add delete confirmation dialogs
+11. ~~**F5**~~ — **DONE** Toast notifications
+12. ~~**F6**~~ — **DONE** Delete confirmation dialogs
 13. **F1** — Add search bar to MapPage
 
 ### Phase 4 — Polish

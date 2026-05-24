@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Pencil, Trash2, MapPin, Save, X, Loader2, ArrowLeft } from 'lucide-react'
 import { pageVariants, cardVariants, staggerContainer, fadeIn, modalVariants } from '../animations/variants'
 import { getStadiums, createStadium, updateStadium, deleteStadium } from '../services/matchService'
+import { useToast } from '../context/ToastContext'
+import ConfirmDialog from '../components/ConfirmDialog'
 
 const USE_MOCK = !import.meta.env.VITE_API_URL
 
@@ -29,7 +31,9 @@ function Field({ label, error, children }) {
 }
 
 export default function StadiumManagementPage() {
-  const [stadiums, setStadiums] = useState([])
+  const toast = useToast()
+  const [stadiums,   setStadiums]   = useState([])
+  const [confirmId,  setConfirmId]  = useState(null)
   const [loading,  setLoading]  = useState(true)
   const [modal,    setModal]    = useState(null)
   const [form,     setFormState] = useState(EMPTY_FORM)
@@ -90,6 +94,7 @@ export default function StadiumManagementPage() {
           const created = await createStadium(payload)
           setStadiums((prev) => [...prev, created])
         }
+        toast.success('האיצטדיון נוצר בהצלחה')
       } else {
         const sid = modal.stadium.stadiumId
         if (USE_MOCK) {
@@ -98,22 +103,27 @@ export default function StadiumManagementPage() {
           const updated = await updateStadium(sid, payload)
           setStadiums((prev) => prev.map((s) => s.stadiumId === sid ? updated : s))
         }
+        toast.success('האיצטדיון עודכן בהצלחה')
       }
       setModal(null)
     } catch (err) {
       console.error(err)
+      toast.error('שגיאה בשמירת האיצטדיון')
     } finally {
       setSaving(false)
     }
   }
 
   async function handleDelete(stadiumId) {
-    if (!window.confirm('האם אתה בטוח שברצונך למחוק אצטדיון זה?')) return
     try {
       if (!USE_MOCK) await deleteStadium(stadiumId)
       setStadiums((prev) => prev.filter((s) => s.stadiumId !== stadiumId))
+      toast.success('האיצטדיון נמחק בהצלחה')
     } catch (err) {
       console.error(err)
+      toast.error('שגיאה במחיקת האיצטדיון')
+    } finally {
+      setConfirmId(null)
     }
   }
 
@@ -209,7 +219,7 @@ export default function StadiumManagementPage() {
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => handleDelete(s.stadiumId)}
+                      onClick={() => setConfirmId(s.stadiumId)}
                       className="p-2 rounded-lg text-dark-400 hover:text-red-400 hover:bg-red-900/20 transition-colors"
                     >
                       <Trash2 size={14} />
@@ -286,6 +296,14 @@ export default function StadiumManagementPage() {
           </AnimatePresence>
         </div>
       </motion.div>
+
+      <ConfirmDialog
+        open={!!confirmId}
+        title="מחיקת איצטדיון"
+        message="האם אתה בטוח שברצונך למחוק איצטדיון זה? לא ניתן לשחזר פעולה זו."
+        onConfirm={() => handleDelete(confirmId)}
+        onCancel={() => setConfirmId(null)}
+      />
     </div>
   )
 }
