@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { SlidersHorizontal, X, ChevronDown } from 'lucide-react'
+import { SlidersHorizontal, X, ChevronDown, Search } from 'lucide-react'
 import { slideInLeft } from '../animations/variants'
 
 function FilterSelect({ label, value, onChange, options, placeholder }) {
@@ -93,6 +93,23 @@ export default function FilterSidebar({ open, onClose, filters, leagues, teams, 
 
             {/* Filters */}
             <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
+              {/* Free-text search */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-medium text-dark-400 uppercase tracking-wide">
+                  חיפוש
+                </label>
+                <div className="relative">
+                  <Search size={13} className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-500 pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder="קבוצה או אצטדיון..."
+                    value={filters.search ?? ''}
+                    onChange={(e) => updateFilter('search', e.target.value)}
+                    className="input-field text-sm pr-8"
+                  />
+                </div>
+              </div>
+
               <FilterSelect
                 label="ליגה"
                 value={filters.league}

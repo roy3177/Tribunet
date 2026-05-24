@@ -89,6 +89,11 @@ export async function deleteUser(id) {
   await api.delete(`/users/${id}`)
 }
 
+export async function updateProfile(name) {
+  const { data } = await api.put('/users/me', { name })
+  return data.data
+}
+
 // ── Favorites ────────────────────────────────────────────────────────────────
 
 export async function getFavorites() {

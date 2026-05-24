@@ -31,6 +31,8 @@ export default function AdminDashboard() {
   const [usersCount,    setUsersCount]    = useState('—')
   const [loading,       setLoading]       = useState(true)
   const [confirmId,     setConfirmId]     = useState(null)
+  const [page,          setPage]          = useState(1)
+  const PAGE_SIZE = 10
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -43,6 +45,7 @@ export default function AdminDashboard() {
         setMatches(matchData)
         setStadiumsCount(stadiumData.length)
         setUsersCount(userData.length)
+        setPage(1)
       }
     } catch (err) {
       console.error(err)
@@ -147,7 +150,7 @@ export default function AdminDashboard() {
         custom={4}
         initial="hidden"
         animate="visible"
-        className="flex gap-3 mb-8"
+        className="flex flex-wrap gap-3 mb-8"
       >
         <Link to="/admin/stadiums" className="btn-secondary flex items-center gap-2 text-sm">
           <MapPin size={15} /> ניהול אצטדיונים
@@ -171,8 +174,22 @@ export default function AdminDashboard() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="w-7 h-7 border-2 border-pitch-500 border-t-transparent rounded-full animate-spin" />
+          <div className="divide-y divide-dark-900">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="px-5 py-4 flex gap-4 animate-pulse">
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 bg-dark-700 rounded w-32" />
+                  <div className="h-2 bg-dark-800 rounded w-24" />
+                </div>
+                <div className="h-3 bg-dark-700 rounded w-24 self-center" />
+                <div className="h-3 bg-dark-700 rounded w-20 self-center" />
+                <div className="h-5 bg-dark-800 rounded-full w-12 self-center" />
+                <div className="flex gap-1 self-center">
+                  <div className="h-7 w-7 bg-dark-800 rounded-lg" />
+                  <div className="h-7 w-7 bg-dark-800 rounded-lg" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : matches.length === 0 ? (
           <div className="text-center py-12 text-dark-500">
@@ -183,8 +200,9 @@ export default function AdminDashboard() {
             </Link>
           </div>
         ) : (
+          <>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm min-w-[600px]">
               <thead>
                 <tr className="border-b border-dark-800 text-dark-400 text-xs uppercase tracking-wider">
                   <th className="px-5 py-3 text-right font-medium">קבוצות</th>
@@ -196,7 +214,7 @@ export default function AdminDashboard() {
               </thead>
               <tbody>
                 <AnimatePresence>
-                  {matches.map((match, i) => (
+                  {matches.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((match, i) => (
                     <motion.tr
                       key={match.matchId}
                       initial={{ opacity: 0 }}
@@ -243,6 +261,30 @@ export default function AdminDashboard() {
               </tbody>
             </table>
           </div>
+          {matches.length > PAGE_SIZE && (
+            <div className="flex items-center justify-between px-5 py-3 border-t border-dark-800">
+              <span className="text-dark-500 text-xs">
+                {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, matches.length)} מתוך {matches.length}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPage((p) => p - 1)}
+                  disabled={page === 1}
+                  className="px-3 py-1.5 text-xs rounded-lg bg-dark-800 border border-dark-700 text-dark-300 hover:text-white hover:border-dark-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  הקודם
+                </button>
+                <button
+                  onClick={() => setPage((p) => p + 1)}
+                  disabled={page * PAGE_SIZE >= matches.length}
+                  className="px-3 py-1.5 text-xs rounded-lg bg-dark-800 border border-dark-700 text-dark-300 hover:text-white hover:border-dark-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                  הבא
+                </button>
+              </div>
+            </div>
+          )}
+          </>
         )}
       </motion.div>
     </motion.div>

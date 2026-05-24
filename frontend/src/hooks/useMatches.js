@@ -30,6 +30,7 @@ export function useMatches() {
   const [error,       setError]       = useState(null)
 
   const [filters, setFilters] = useState({
+    search:     '',
     league:     '',
     team:       '',
     hasTickets: '',   // 'true' | 'false' | ''
@@ -75,6 +76,13 @@ export function useMatches() {
   // Filtered match list
   const filteredMatches = useMemo(() => {
     return allMatches.filter((m) => {
+      if (filters.search) {
+        const q = filters.search.toLowerCase()
+        const hit = m.homeTeam?.toLowerCase().includes(q) ||
+                    m.awayTeam?.toLowerCase().includes(q) ||
+                    m.stadiumName?.toLowerCase().includes(q)
+        if (!hit) return false
+      }
       if (filters.league     && m.league !== filters.league)                             return false
       if (filters.team       && m.homeTeam !== filters.team && m.awayTeam !== filters.team) return false
       if (filters.hasTickets && String(m.hasTickets) !== filters.hasTickets)             return false
@@ -106,7 +114,7 @@ export function useMatches() {
   }
 
   function clearFilters() {
-    setFilters({ league: '', team: '', hasTickets: '', city: '' })
+    setFilters({ search: '', league: '', team: '', hasTickets: '', city: '' })
   }
 
   return {

@@ -82,9 +82,13 @@ export function AuthProvider({ children }) {
     return await resendSignUpCode({ username: email })
   }
 
+  function updateProfileName(name) {
+    setProfile((prev) => prev ? { ...prev, name } : prev)
+  }
+
   return (
     <AuthContext.Provider
-      value={{ user, profile, isAdmin, loading, login, logout, register, confirmRegistration, resendCode }}
+      value={{ user, profile, isAdmin, loading, login, logout, register, confirmRegistration, resendCode, updateProfileName }}
     >
       {children}
     </AuthContext.Provider>

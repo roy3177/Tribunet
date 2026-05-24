@@ -372,6 +372,12 @@ Resources:
             ApiId: !Ref TribunetApi
             Path: /users/{id}
             Method: DELETE
+        PutMe:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref TribunetApi
+            Path: /users/me
+            Method: PUT
 
   # ── Lambda: Teams ─────────────────────────────────────────────────────────────
   TeamsFunction:

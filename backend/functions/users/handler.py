@@ -2,7 +2,7 @@ import os
 import boto3
 from shared import response
 from shared.auth import require_admin, get_claims
-from shared.db import USERS_TABLE, scan_with_filter, get_item, delete_item
+from shared.db import USERS_TABLE, scan_with_filter, get_item, put_item, delete_item
 
 _cognito = None
 
@@ -23,6 +23,8 @@ def main(event, context):
     try:
         if route_key == 'GET /users/me':
             return _get_me(event)
+        elif route_key == 'PUT /users/me':
+            return _update_me(event)
         elif route_key == 'GET /users':
             return _get_users(event)
         elif route_key == 'DELETE /users/{id}':
@@ -46,6 +48,29 @@ def _get_me(event: dict):
     if not item:
         return response.not_found('User')
     return response.ok(item)
+
+
+def _update_me(event: dict):
+    import json
+    claims  = get_claims(event)
+    user_id = claims.get('sub', '')
+    if not user_id:
+        return response.bad_request('Missing user id in token')
+
+    body = json.loads(event.get('body') or '{}')
+    name = body.get('name', '').strip()
+    if not name:
+        return response.bad_request('Name is required')
+    if len(name) > 100:
+        return response.bad_request('Name too long')
+
+    existing = get_item(USERS_TABLE, {'userId': user_id})
+    if not existing:
+        return response.not_found('User')
+
+    updated = {**existing, 'name': name}
+    put_item(USERS_TABLE, updated)
+    return response.ok(updated)
 
 
 def _get_users(event: dict):

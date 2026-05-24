@@ -1,13 +1,21 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate, Link } from 'react-router-dom'
-import { User, Mail, Shield, Heart, LogOut, Trophy, Map } from 'lucide-react'
+import { User, Mail, Shield, Heart, LogOut, Trophy, Map, Pencil, Check, X } from 'lucide-react'
 import { pageVariants, cardVariants, staggerContainer } from '../animations/variants'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
+import { updateProfile } from '../services/matchService'
 import profileImage from '../assets/images/profile_image.jpg'
 
 export default function UserProfilePage() {
-  const { user, profile, isAdmin, logout } = useAuth()
+  const { user, profile, isAdmin, logout, updateProfileName } = useAuth()
+  const toast    = useToast()
   const navigate = useNavigate()
+
+  const [editing,   setEditing]   = useState(false)
+  const [nameInput, setNameInput] = useState('')
+  const [saving,    setSaving]    = useState(false)
 
   const email       = user?.signInDetails?.loginId ?? ''
   const displayName = profile?.name ?? email.split('@')[0] ?? 'משתמש'
@@ -15,6 +23,27 @@ export default function UserProfilePage() {
   async function handleLogout() {
     await logout()
     navigate('/')
+  }
+
+  function startEdit() {
+    setNameInput(displayName)
+    setEditing(true)
+  }
+
+  async function handleSave() {
+    const trimmed = nameInput.trim()
+    if (!trimmed) return
+    setSaving(true)
+    try {
+      await updateProfile(trimmed)
+      updateProfileName(trimmed)
+      toast.success('השם עודכן בהצלחה')
+      setEditing(false)
+    } catch {
+      toast.error('שגיאה בעדכון השם')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const quickLinks = [
@@ -59,9 +88,38 @@ export default function UserProfilePage() {
         animate="visible"
         className="card mb-5"
       >
-        <div className="flex items-center gap-4 mb-5">
-          <div>
-            <p className="text-white font-bold text-xl">{displayName}</p>
+        <div className="flex items-center justify-between gap-4 mb-5">
+          <div className="flex-1 min-w-0">
+            {editing ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') setEditing(false) }}
+                  autoFocus
+                  maxLength={100}
+                  className="input-field text-sm flex-1"
+                  placeholder="שם מלא"
+                />
+                <motion.button whileTap={{ scale: 0.95 }} onClick={handleSave} disabled={saving}
+                  className="p-2 rounded-lg bg-pitch-700 text-white hover:bg-pitch-600 disabled:opacity-50 transition-colors">
+                  <Check size={14} />
+                </motion.button>
+                <motion.button whileTap={{ scale: 0.95 }} onClick={() => setEditing(false)}
+                  className="p-2 rounded-lg bg-dark-700 text-dark-300 hover:text-white transition-colors">
+                  <X size={14} />
+                </motion.button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <p className="text-white font-bold text-xl truncate">{displayName}</p>
+                <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} onClick={startEdit}
+                  className="p-1.5 rounded-lg text-dark-500 hover:text-white hover:bg-dark-700 transition-colors shrink-0">
+                  <Pencil size={13} />
+                </motion.button>
+              </div>
+            )}
             <div className="flex items-center gap-2 mt-1.5">
               {isAdmin && (
                 <span className="badge-green flex items-center gap-1 text-xs">
