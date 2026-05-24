@@ -22,12 +22,21 @@ def main(event, context):
         claims  = get_claims(event)
         user_id = claims['sub']
 
+        if not user_id:
+            return response.bad_request('Missing user id in token')
+
         if route_key == 'GET /favorites':
             return _get_favorites(user_id)
         elif route_key == 'POST /favorites/{id}':
-            return _add_favorite(user_id, event['pathParameters']['id'])
+            match_id = event.get('pathParameters', {}).get('id', '').strip()
+            if not match_id:
+                return response.bad_request('Missing match id')
+            return _add_favorite(user_id, match_id)
         elif route_key == 'DELETE /favorites/{id}':
-            return _remove_favorite(user_id, event['pathParameters']['id'])
+            match_id = event.get('pathParameters', {}).get('id', '').strip()
+            if not match_id:
+                return response.bad_request('Missing match id')
+            return _remove_favorite(user_id, match_id)
         else:
             return response.not_found('Route')
 
@@ -38,15 +47,11 @@ def main(event, context):
         return response.server_error()
 
 
-# ── Handlers ──────────────────────────────────────────────────────────────────
-
 def _get_favorites(user_id: str):
-    # Query favorites table directly by userId (partition key)
-    table = get_dynamodb().Table(os.environ['DYNAMODB_FAVORITES_TABLE'])
+    table  = get_dynamodb().Table(os.environ['DYNAMODB_FAVORITES_TABLE'])
     result = table.query(KeyConditionExpression=Key('userId').eq(user_id))
     favs   = result.get('Items', [])
 
-    # Enrich each favorite with full match data
     enriched = []
     for fav in favs:
         match = get_item(MATCHES_TABLE, {'matchId': fav['matchId']})
@@ -57,7 +62,6 @@ def _get_favorites(user_id: str):
 
 
 def _add_favorite(user_id: str, match_id: str):
-    # Verify match exists
     match = get_item(MATCHES_TABLE, {'matchId': match_id})
     if not match:
         return response.not_found('Match')

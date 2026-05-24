@@ -9,6 +9,26 @@ from shared.db import (
     put_item, get_item, delete_item, scan_with_filter,
 )
 
+REQUIRED_FIELDS = ['homeTeam', 'awayTeam', 'date', 'time', 'stadiumId', 'league']
+
+def _validate_match(body: dict) -> str | None:
+    for field in REQUIRED_FIELDS:
+        if not body.get(field, '').strip():
+            return f'Missing required field: {field}'
+    try:
+        datetime.strptime(body['date'], '%Y-%m-%d')
+    except ValueError:
+        return 'Invalid date format, expected YYYY-MM-DD'
+    if len(body.get('homeTeam', '')) > 100:
+        return 'homeTeam too long'
+    if len(body.get('awayTeam', '')) > 100:
+        return 'awayTeam too long'
+    if body.get('homeTeam') == body.get('awayTeam'):
+        return 'homeTeam and awayTeam cannot be the same'
+    if body.get('ticketUrl') and not body['ticketUrl'].startswith('http'):
+        return 'ticketUrl must be a valid URL'
+    return None
+
 
 def main(event, context):
     method    = event['requestContext']['http']['method']
@@ -38,8 +58,6 @@ def main(event, context):
         return response.server_error()
 
 
-# ── Handlers ──────────────────────────────────────────────────────────────────
-
 def _get_matches():
     items = scan_with_filter(MATCHES_TABLE)
     return response.ok(items)
@@ -56,22 +74,28 @@ def _create_match(event: dict):
     require_admin(event)
     body = json.loads(event.get('body') or '{}')
 
+    error = _validate_match(body)
+    if error:
+        return response.bad_request(error)
+
     stadium_id   = body.get('stadiumId', '')
     stadium_name = _resolve_stadium_name(stadium_id)
+    if not stadium_name:
+        return response.bad_request('Stadium not found')
 
     item = {
         'matchId':     str(uuid.uuid4()),
-        'homeTeam':    body.get('homeTeam', ''),
-        'awayTeam':    body.get('awayTeam', ''),
-        'date':        body.get('date', ''),
-        'time':        body.get('time', ''),
+        'homeTeam':    body['homeTeam'].strip(),
+        'awayTeam':    body['awayTeam'].strip(),
+        'date':        body['date'],
+        'time':        body['time'],
         'stadiumId':   stadium_id,
         'stadiumName': stadium_name,
-        'league':      body.get('league', ''),
+        'league':      body['league'].strip(),
         'hasTickets':  bool(body.get('hasTickets', False)),
-        'ticketUrl':   body.get('ticketUrl', ''),
+        'ticketUrl':   body.get('ticketUrl', '').strip(),
         'createdAt':   datetime.now(timezone.utc).isoformat(),
-        'ttl':         _compute_ttl(body.get('date', '')),
+        'ttl':         _compute_ttl(body['date']),
     }
     put_item(MATCHES_TABLE, item)
     return response.created(item)
@@ -86,15 +110,19 @@ def _update_match(event: dict, match_id: str):
 
     body = json.loads(event.get('body') or '{}')
 
-    # Re-resolve stadium name if stadiumId changed
+    merged = {**existing, **body}
+    error = _validate_match(merged)
+    if error:
+        return response.bad_request(error)
+
     stadium_id = body.get('stadiumId', existing.get('stadiumId', ''))
     if stadium_id != existing.get('stadiumId'):
-        body['stadiumName'] = _resolve_stadium_name(stadium_id)
+        merged['stadiumName'] = _resolve_stadium_name(stadium_id)
 
-    updated = {**existing, **body, 'matchId': match_id}
-    updated['ttl'] = _compute_ttl(updated.get('date', ''))
-    put_item(MATCHES_TABLE, updated)
-    return response.ok(updated)
+    merged['matchId'] = match_id
+    merged['ttl'] = _compute_ttl(merged.get('date', ''))
+    put_item(MATCHES_TABLE, merged)
+    return response.ok(merged)
 
 
 def _delete_match(event: dict, match_id: str):
@@ -107,8 +135,6 @@ def _delete_match(event: dict, match_id: str):
     delete_item(MATCHES_TABLE, {'matchId': match_id})
     return response.no_content()
 
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
 
 def _compute_ttl(date_str: str) -> int:
     if not date_str:

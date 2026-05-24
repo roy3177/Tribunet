@@ -37,12 +37,12 @@ def main(event, context):
         return response.server_error()
 
 
-# ── Handlers ──────────────────────────────────────────────────────────────────
-
 def _get_me(event: dict):
     claims  = get_claims(event)
     user_id = claims.get('sub', '')
-    item    = get_item(USERS_TABLE, {'userId': user_id})
+    if not user_id:
+        return response.bad_request('Missing user id in token')
+    item = get_item(USERS_TABLE, {'userId': user_id})
     if not item:
         return response.not_found('User')
     return response.ok(item)
@@ -57,20 +57,17 @@ def _get_users(event: dict):
 def _delete_user(event: dict):
     require_admin(event)
 
-    user_id = event.get('pathParameters', {}).get('id')
+    user_id = event.get('pathParameters', {}).get('id', '').strip()
     if not user_id:
         return response.bad_request('Missing user id')
 
-    # Delete from Cognito (username = sub/userId)
     try:
         get_cognito().admin_delete_user(
             UserPoolId=os.environ['COGNITO_USER_POOL_ID'],
             Username=user_id,
         )
     except get_cognito().exceptions.UserNotFoundException:
-        pass  # Already gone from Cognito — continue to DynamoDB cleanup
+        pass
 
-    # Delete from DynamoDB
     delete_item(USERS_TABLE, {'userId': user_id})
-
     return response.ok({'deleted': user_id})
