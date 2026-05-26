@@ -58,6 +58,20 @@ def scan_with_filter(table_env_var: str, filter_expression=None) -> list[dict]:
         items.extend(result.get('Items', []))
     return items
 
+def scan_page(table_env_var: str, limit: int, exclusive_start_key: dict | None = None, filter_expression=None) -> dict:
+    """Single-page scan for pagination. Returns items + next cursor key."""
+    table = get_table(table_env_var)
+    kwargs = {'Limit': limit}
+    if filter_expression is not None:
+        kwargs['FilterExpression'] = filter_expression
+    if exclusive_start_key is not None:
+        kwargs['ExclusiveStartKey'] = exclusive_start_key
+    result = table.scan(**kwargs)
+    return {
+        'items': result.get('Items', []),
+        'lastKey': result.get('LastEvaluatedKey')  # None if no more pages
+    }
+
 def query_gsi(table_env_var: str, index_name: str, key_condition, filter_expression=None) -> list[dict]:
     table = get_table(table_env_var)
     kwargs = {

@@ -1,12 +1,13 @@
 import json
 import uuid
+import base64
 from datetime import datetime, timezone, timedelta
 
 from shared import response
 from shared.auth import require_admin
 from shared.db import (
     MATCHES_TABLE, STADIUMS_TABLE,
-    put_item, get_item, delete_item, scan_with_filter,
+    put_item, get_item, delete_item, scan_with_filter, scan_page,
 )
 
 REQUIRED_FIELDS = ['homeTeam', 'awayTeam', 'date', 'time', 'stadiumId', 'league']
@@ -39,7 +40,7 @@ def main(event, context):
 
     try:
         if route_key == 'GET /matches':
-            return _get_matches()
+            return _get_matches(event)
         elif route_key == 'GET /matches/{id}':
             return _get_match(event['pathParameters']['id'])
         elif route_key == 'POST /matches':
@@ -58,9 +59,33 @@ def main(event, context):
         return response.server_error()
 
 
-def _get_matches():
-    items = scan_with_filter(MATCHES_TABLE)
-    return response.ok(items)
+def _get_matches(event: dict):
+    params = event.get('queryStringParameters') or {}
+    limit = min(int(params.get('limit', 20)), 100)  # cap at 100
+
+    # Decode cursor from frontend
+    last_key = None
+    raw_cursor = params.get('lastKey')
+    if raw_cursor:
+        try:
+            last_key = json.loads(base64.b64decode(raw_cursor).decode())
+        except Exception:
+            return response.bad_request('Invalid pagination cursor')
+
+    result = scan_page(MATCHES_TABLE, limit=limit, exclusive_start_key=last_key)
+
+    # Encode next cursor for frontend
+    next_cursor = None
+    if result['lastKey']:
+        next_cursor = base64.b64encode(
+            json.dumps(result['lastKey']).encode()
+        ).decode()
+
+    return response.ok({
+        'matches': result['items'],
+        'nextKey': next_cursor,  # null = last page
+        'count': len(result['items'])
+    })
 
 
 def _get_match(match_id: str):
