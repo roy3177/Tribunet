@@ -32,7 +32,7 @@ def _validate_match(body: dict) -> str | None:
 
 
 def main(event, context):
-    method    = event['requestContext']['http']['method']
+    method    = event.get('requestContext', {}).get('http', {}).get('method', 'GET')
     route_key = event.get('routeKey', '')
 
     if method == 'OPTIONS':

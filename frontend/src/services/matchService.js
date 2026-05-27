@@ -21,7 +21,7 @@ api.interceptors.request.use(async (config) => {
 
 export async function getMatches(filters = {}) {
   const { data } = await api.get('/matches', { params: filters })
-  return data.data ?? []
+  return data.data?.matches ?? data.data ?? []
 }
 
 export async function getMatch(id) {

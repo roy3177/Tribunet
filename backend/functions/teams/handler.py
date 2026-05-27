@@ -8,7 +8,7 @@ from shared.db import TEAMS_TABLE, put_item, get_item, delete_item, scan_with_fi
 
 
 def main(event, context):
-    method    = event['requestContext']['http']['method']
+    method    = event.get('requestContext', {}).get('http', {}).get('method', 'GET')
     route_key = event.get('routeKey', '')
 
     if method == 'OPTIONS':
