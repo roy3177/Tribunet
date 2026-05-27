@@ -44,14 +44,14 @@
 
 | Function | Runtime | Memory | Timeout | Last Deploy |
 |---|---|---|---|---|
-| `tribunet-prod-MatchesFunction-zZVOugiXoueO` | Python 3.13 | 256MB | 15s | May 24 2026 |
-| `tribunet-prod-StadiumsFunction-zFUGxOhAn8at` | Python 3.13 | 256MB | 15s | May 24 2026 |
-| `tribunet-prod-FavoritesFunction-qDIrJ9d6DCHn` | Python 3.13 | 256MB | 15s | May 24 2026 |
-| `tribunet-prod-UsersFunction-cdcuOOvqCsDp` | Python 3.13 | 256MB | 15s | May 24 2026 |
+| `tribunet-prod-MatchesFunction-zZVOugiXoueO` | Python 3.13 | 256MB | 15s | May 27 2026 |
+| `tribunet-prod-StadiumsFunction-zFUGxOhAn8at` | Python 3.13 | 256MB | 15s | May 27 2026 |
+| `tribunet-prod-FavoritesFunction-qDIrJ9d6DCHn` | Python 3.13 | 256MB | 15s | May 27 2026 |
+| `tribunet-prod-UsersFunction-cdcuOOvqCsDp` | Python 3.13 | 256MB | 15s | May 27 2026 |
 | `tribunet-prod-CognitoTriggerFunction-1Mjdq6C6QaVJ` | Python 3.13 | 256MB | 15s | May 17 2026 |
 | `tribunet-prod-SchedulerFunction-NaPjrfxJpeau` | Python 3.13 | 256MB | 15s | May 17 2026 |
-| `tribunet-prod-TeamsFunction-rDOpmXrw7Fgn` | Python 3.13 | 256MB | 15s | May 21 2026 |
-| `tribunet-prod-LeaguesFunction-9gJvE4EDVcCu` | Python 3.13 | 256MB | 15s | May 21 2026 |
+| `tribunet-prod-TeamsFunction-9gJvE4EDVcCu` | Python 3.13 | 256MB | 15s | May 27 2026 |
+| `tribunet-prod-LeaguesFunction-rDOpmXrw7Fgn` | Python 3.13 | 256MB | 15s | May 27 2026 |
 
 ### Cognito
 - User Pool ID: `us-east-1_kcOTW3PmY`
@@ -323,9 +323,9 @@ Framer Motion variants: `fadeIn`, `slideInLeft`, `slideInRight`, `slideUp`, `sta
 |---|---|---|
 | ~~B5~~ | ~~Seed Teams + Leagues data~~ | **DONE** — 26 teams + 7 leagues in DynamoDB |
 | B6 | **Add more matches** — Only 11 matches; need 30–50 for a realistic demo | Demo quality |
-| B7 | **Unit tests** — No pytest tests exist anywhere | Academic requirement |
+| ~~B7~~ | ~~**Unit tests**~~ | **DONE** — 140 pytest tests, 100% pass, no AWS credentials needed |
 | ~~B8~~ | ~~`PUT /users/me` endpoint~~ | **DONE** — Deployed; updates DynamoDB name field |
-| B9 | **Pagination for `GET /matches`** — DynamoDB scan has 1MB limit | Scalability |
+| ~~B9~~ | ~~**Pagination for `GET /matches`**~~ | **DONE** — Base64 cursor pagination deployed |
 
 ---
 
@@ -375,8 +375,8 @@ Framer Motion variants: `fadeIn`, `slideInLeft`, `slideInRight`, `slideUp`, `sta
 15. ~~**F9**~~ — **DONE** Pagination (10/page) in AdminDashboard
 16. ~~**F10**~~ — **DONE** Edit profile name (inline form, PUT /users/me)
 17. ~~**B8**~~ — **DONE** PUT /users/me backend endpoint deployed
-18. **B9** — Add pagination to `GET /matches` — optional
-19. **B7** — Write basic unit tests (pytest) — optional
+18. ~~**B9**~~ — **DONE** Pagination for `GET /matches` (base64 cursor)
+19. ~~**B7**~~ — **DONE** 140 pytest unit tests, all passing
 
 ### Phase 5 — Documentation (Academic Deliverables)
 21. **D1** — Write OpenAPI/Swagger spec
@@ -409,6 +409,13 @@ Framer Motion variants: `fadeIn`, `slideInLeft`, `slideInRight`, `slideUp`, `sta
 | **EventBridge Scheduler** | Live | Weekly Sunday 7:00 UTC — ENABLED |
 | **SNS Alerts** | Live | `tribunet-alerts-prod` |
 | **Documentation** | 0 / 9 | Nothing written yet |
-| **Tests** | 0% | No tests anywhere |
+| **Tests** | **140 / 140 passing** | pytest — all handlers, validation, auth, response helpers |
 
-**Phases 1–4 are complete. All frontend features (F1–F10) and core backend endpoints (B1–B8) are live on AWS. Remaining: B6 (more matches for demo), and Phase 5 documentation (D1–D9).**
+**Phases 1–4 are complete. All frontend features (F1–F10) and all backend items (B1–B9) are done. Remaining: B6 (more matches for demo) and Phase 5 documentation (D1–D9).**
+
+### Session 5 changes (May 27 2026)
+- Fixed `KeyError: 'requestContext'` crash in all 6 Lambda handlers — deployed to AWS
+- Fixed zip packaging bug (wrong directory structure) — all 6 Lambdas redeployed correctly
+- Fixed `getMatches()` returning object instead of array (`data.data.matches`) — frontend rebuilt + deployed to S3/CloudFront
+- Set `role: admin` in DynamoDB for `roymeoded2512@gmail.com`
+- Added **140 pytest unit tests** across all 8 backend handlers + shared modules (`tests/` directory, `pytest.ini`)
