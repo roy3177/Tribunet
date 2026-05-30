@@ -126,6 +126,18 @@ export default function LoginPage() {
           icon={Lock} custom={1} error={errors.password}
         />
 
+        {/* Forgot password */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="text-right"
+        >
+          <Link to="/forgot-password" className="text-sm text-pitch-400 hover:text-pitch-300 font-medium transition-colors">
+            ?שכחת סיסמה
+          </Link>
+        </motion.div>
+
         {/* API error */}
         <AnimatePresence>
           {apiError && (
