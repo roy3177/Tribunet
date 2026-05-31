@@ -48,21 +48,21 @@ function InputField({ id, label, type = 'text', value, onChange, icon: Icon, cus
 }
 
 export default function ForgotPasswordPage() {
-  const [step, setStep]         = useState('email') // 'email' | 'code' | 'done'
-  const [email, setEmail]       = useState('')
-  const [code, setCode]         = useState('')
+  const [step, setStep]               = useState('email') // 'email' | 'code' | 'done'
+  const [email, setEmail]             = useState('')
+  const [code, setCode]               = useState('')
   const [newPassword, setNewPassword] = useState('')
-  const [errors, setErrors]     = useState({})
-  const [apiError, setApiError] = useState('')
-  const [loading, setLoading]   = useState(false)
+  const [errors, setErrors]           = useState({})
+  const [apiError, setApiError]       = useState('')
+  const [loading, setLoading]         = useState(false)
 
   const navigate = useNavigate()
 
   // ── Step 1: send reset code ──────────────────────────────────────────────
   function validateEmail() {
     const e = {}
-    if (!email.trim())                          e.email = 'נדרשת כתובת אימייל'
-    else if (!/\S+@\S+\.\S+/.test(email))       e.email = 'כתובת אימייל לא תקינה'
+    if (!email.trim())                    e.email = 'נדרשת כתובת אימייל'
+    else if (!/\S+@\S+\.\S+/.test(email)) e.email = 'כתובת אימייל לא תקינה'
     setErrors(e)
     return Object.keys(e).length === 0
   }
@@ -79,7 +79,6 @@ export default function ForgotPasswordPage() {
     } catch (err) {
       const name = err?.name ?? ''
       if (name === 'UserNotFoundException') {
-        // Don't reveal if user exists — same UX either way
         setStep('code')
       } else if (name === 'LimitExceededException') {
         setApiError('חרגת מהמגבלה — נסה שוב מאוחר יותר')
@@ -94,8 +93,8 @@ export default function ForgotPasswordPage() {
   // ── Step 2: confirm new password ─────────────────────────────────────────
   function validateCode() {
     const e = {}
-    if (!code.trim())           e.code        = 'נדרש קוד אימות'
-    if (!newPassword)           e.newPassword = 'נדרשת סיסמה חדשה'
+    if (!code.trim())                e.code        = 'נדרש קוד אימות'
+    if (!newPassword)                e.newPassword = 'נדרשת סיסמה חדשה'
     else if (newPassword.length < 8) e.newPassword = 'סיסמה חייבת להכיל לפחות 8 תווים'
     setErrors(e)
     return Object.keys(e).length === 0
@@ -166,7 +165,7 @@ export default function ForgotPasswordPage() {
             className="text-center mb-8"
           >
             <h1 className="text-2xl font-bold text-white">איפוס סיסמה</h1>
-            <p className="text-dark-400 text-sm mt-1">
+            <p className="text-dark-400 text-sm mt-1" dir="rtl">
               {step === 'email'
                 ? 'נשלח לך קוד לאימייל'
                 : `קוד נשלח לכתובת ${email}`}
@@ -254,12 +253,14 @@ export default function ForgotPasswordPage() {
               </motion.button>
 
               <motion.p
+                dir="rtl"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
                 className="text-center text-sm text-dark-400"
               >
-                לא קיבלת קוד?{' '}
+                לא קיבלת קוד?
+                <br />
                 <button
                   type="button"
                   onClick={() => { setStep('email'); setErrors({}); setApiError('') }}
