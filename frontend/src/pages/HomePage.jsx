@@ -10,7 +10,7 @@ import homeImage from '../assets/images/home_image.jpg'
 import upcomingImage from '../assets/images/upcoming_games.jpg'
 import downHomeImage from '../assets/images/down_home_page.jpg'
 
-const ISRAELI_LEAGUES = ['ליגת העל', 'הליגה הלאומית', 'הליגה הארצית']
+const ISRAELI_LEAGUES = ['ליגת העל', 'הליגה הלאומית', 'הליגה הארצית', 'ליגה לאומית', 'גביע הטוטו', 'גביע המדינה', 'ליגה ארצית']
 
 const FEATURES = [
   {

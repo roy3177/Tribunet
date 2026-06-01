@@ -40,13 +40,25 @@ def main(event, context):
 
 
 def _get_me(event: dict):
+    from datetime import datetime, timezone
     claims  = get_claims(event)
     user_id = claims.get('sub', '')
     if not user_id:
         return response.bad_request('Missing user id in token')
     item = get_item(USERS_TABLE, {'userId': user_id})
     if not item:
-        return response.not_found('User')
+        # User confirmed in Cognito but not yet in DynamoDB — create on first login
+        email = claims.get('email', '')
+        name  = claims.get('name', email.split('@')[0])
+        item  = {
+            'userId':    user_id,
+            'email':     email,
+            'name':      name,
+            'role':      'user',
+            'createdAt': datetime.now(timezone.utc).isoformat(),
+        }
+        put_item(USERS_TABLE, item)
+        print(f'[users] Auto-created DynamoDB record for {email}')
     return response.ok(item)
 
 
