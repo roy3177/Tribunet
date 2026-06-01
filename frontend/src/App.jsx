@@ -11,6 +11,7 @@ import AuthLayout from './layouts/AuthLayout'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import MapPage from './pages/MapPage'
 import MatchDetailsPage from './pages/MatchDetailsPage'
 import FavoritesPage from './pages/FavoritesPage'
@@ -66,6 +67,14 @@ function AnimatedRoutes() {
             element={
               <GuestRoute>
                 <RegisterPage />
+              </GuestRoute>
+            }
+          />
+          <Route
+            path="/forgot-password"
+            element={
+              <GuestRoute>
+                <ForgotPasswordPage />
               </GuestRoute>
             }
           />
