@@ -161,10 +161,6 @@ pytest tests/ -v
 
 ---
 
-## Installation & Deployment
 
-For full step-by-step deployment instructions see [INSTALLATION.md](INSTALLATION.md).
-
----
 
 *Built as a final academic project demonstrating production-grade AWS Serverless architecture.*
