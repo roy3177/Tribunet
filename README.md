@@ -63,7 +63,7 @@ A serverless web platform for football fans in Israel. Browse upcoming matches o
 
 ## Architecture
 
-![Tribunet AWS Architecture](docs/architecture.png)
+![Tribunet AWS Architecture](frontend\src\assets\images\architecture.png)
 
 ---
 
@@ -114,8 +114,13 @@ Tribunet/
 │
 └── docs/                      # Documentation
     ├── architecture.png
-    ├── architecture-explanation.md
-    └── swagger.yaml           # Full OpenAPI 3.0 documentation
+    ├── swagger.yaml               # Full OpenAPI 3.0 specification
+    ├── DEVELOPER_REFERENCE.md     # Boto3-style API + module reference
+    ├── DEVELOPER_GUIDE.md         # Setup, testing, deployment guide
+    ├── USER_GUIDE.md              # End-user manual
+    ├── ADMIN_GUIDE.md             # Admin operations guide
+    ├── RISK_ANALYSIS.md           # Security & operational risk analysis
+    └── COST_ESTIMATION.md         # AWS monthly cost breakdown
 ```
 
 ---
@@ -145,7 +150,9 @@ Base URL: `https://XXXXXXXXXX.execute-api.us-east-1.amazonaws.com/prod`
 | GET | `/users` | Admin | List all users |
 | DELETE | `/users/{id}` | Admin | Delete a user |
 
-Full Swagger documentation: `docs/swagger.yaml`
+Full Swagger documentation: [docs/swagger.yaml](docs/swagger.yaml)
+
+Full developer API reference: [docs/DEVELOPER_REFERENCE.md](docs/DEVELOPER_REFERENCE.md)
 
 ---
 
@@ -164,6 +171,18 @@ pytest tests/ -v
 ## Installation & Deployment
 
 For full step-by-step deployment instructions see [INSTALLATION.md](INSTALLATION.md).
+
+## Documentation
+
+| Document | Description |
+|----------|-------------|
+| [DEVELOPER_REFERENCE.md](docs/DEVELOPER_REFERENCE.md) | Boto3-style reference for all 8 Lambda functions and 3 shared modules |
+| [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) | Local setup, testing, deployment, and extending the system |
+| [USER_GUIDE.md](docs/USER_GUIDE.md) | End-user manual for all platform features |
+| [ADMIN_GUIDE.md](docs/ADMIN_GUIDE.md) | Admin operations: matches, stadiums, users, monitoring |
+| [RISK_ANALYSIS.md](docs/RISK_ANALYSIS.md) | Security, data, scalability, and operational risks |
+| [COST_ESTIMATION.md](docs/COST_ESTIMATION.md) | AWS monthly cost breakdown for demo and production scale |
+| [swagger.yaml](docs/swagger.yaml) | Full OpenAPI 3.0 specification |
 
 ---
 
