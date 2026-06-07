@@ -8,6 +8,9 @@ from shared.db import TEAMS_TABLE, put_item, get_item, delete_item, scan_with_fi
 
 
 def main(event, context):
+
+    """Lambda entry point for /teams — routes GET / GET {id} / POST / PUT / DELETE handlers."""
+
     method    = event.get('requestContext', {}).get('http', {}).get('method', 'GET')
     route_key = event.get('routeKey', '')
 
@@ -36,11 +39,17 @@ def main(event, context):
 
 
 def _get_teams():
+
+    """Return all teams sorted alphabetically by name."""
+
     items = scan_with_filter(TEAMS_TABLE)
     return response.ok(sorted(items, key=lambda x: x.get('name', '')))
 
 
 def _get_team(team_id: str):
+
+    """Return a single team by teamId. Returns 404 if not found."""
+
     item = get_item(TEAMS_TABLE, {'teamId': team_id})
     if not item:
         return response.not_found('Team')
@@ -48,6 +57,9 @@ def _get_team(team_id: str):
 
 
 def _create_team(event: dict):
+
+    """Create a new team. Admin only."""
+
     require_admin(event)
     body = json.loads(event.get('body') or '{}')
     item = {
@@ -62,6 +74,9 @@ def _create_team(event: dict):
 
 
 def _update_team(event: dict, team_id: str):
+
+    """Update an existing team by teamId. Admin only. Merges existing fields with new body."""
+
     require_admin(event)
     existing = get_item(TEAMS_TABLE, {'teamId': team_id})
     if not existing:
@@ -73,6 +88,9 @@ def _update_team(event: dict, team_id: str):
 
 
 def _delete_team(event: dict, team_id: str):
+
+    """Delete a team by teamId. Admin only. Returns 404 if not found."""
+
     require_admin(event)
     existing = get_item(TEAMS_TABLE, {'teamId': team_id})
     if not existing:

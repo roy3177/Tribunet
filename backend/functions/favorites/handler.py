@@ -12,6 +12,9 @@ from boto3.dynamodb.conditions import Key
 
 
 def main(event, context):
+
+    """Lambda entry point for /favorites — routes GET, POST /{id}, DELETE /{id}."""
+
     method    = event.get('requestContext', {}).get('http', {}).get('method', 'GET')
     route_key = event.get('routeKey', '')
 
@@ -48,6 +51,9 @@ def main(event, context):
 
 
 def _get_favorites(user_id: str):
+
+    """Return all favorite matches for the current user, enriched with full match data."""
+
     table  = get_dynamodb().Table(os.environ['DYNAMODB_FAVORITES_TABLE'])
     result = table.query(KeyConditionExpression=Key('userId').eq(user_id))
     favs   = result.get('Items', [])
@@ -62,6 +68,9 @@ def _get_favorites(user_id: str):
 
 
 def _add_favorite(user_id: str, match_id: str):
+
+    """Add a match to the current user's favorites. Returns 404 if match does not exist."""
+
     match = get_item(MATCHES_TABLE, {'matchId': match_id})
     if not match:
         return response.not_found('Match')
@@ -76,6 +85,9 @@ def _add_favorite(user_id: str, match_id: str):
 
 
 def _remove_favorite(user_id: str, match_id: str):
+
+    """Remove a match from the current user's favorites. Returns 404 if not found."""
+
     existing = get_item(FAVORITES_TABLE, {'userId': user_id, 'matchId': match_id})
     if not existing:
         return response.not_found('Favorite')

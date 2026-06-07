@@ -11,6 +11,9 @@ from shared.db import (
 )
 
 def _validate_stadium(body: dict) -> str | None:
+
+    """Validate stadium fields. Returns an error message string or None if valid."""
+
     if not body.get('name', '').strip():
         return 'Missing required field: name'
     if not body.get('city', '').strip():
@@ -33,6 +36,9 @@ def _validate_stadium(body: dict) -> str | None:
 
 
 def main(event, context):
+
+    """Lambda entry point for /stadiums — routes to GET / GET {id} / POST / PUT / DELETE handlers."""
+
     method    = event.get('requestContext', {}).get('http', {}).get('method', 'GET')
     route_key = event.get('routeKey', '')
 
@@ -61,11 +67,17 @@ def main(event, context):
 
 
 def _get_stadiums():
+
+    """Return all stadiums as a list."""
+
     items = scan_with_filter(STADIUMS_TABLE)
     return response.ok(items)
 
 
 def _get_stadium(stadium_id: str):
+
+    """Return a single stadium by stadiumId. Returns 404 if not found."""
+
     item = get_item(STADIUMS_TABLE, {'stadiumId': stadium_id})
     if not item:
         return response.not_found('Stadium')
@@ -73,6 +85,9 @@ def _get_stadium(stadium_id: str):
 
 
 def _create_stadium(event: dict):
+
+    """Create a new stadium. Admin only. Stores lat/lng as Decimal for DynamoDB compatibility."""
+
     require_admin(event)
     body = json.loads(event.get('body') or '{}')
 
@@ -93,6 +108,9 @@ def _create_stadium(event: dict):
 
 
 def _update_stadium(event: dict, stadium_id: str):
+
+    """Update an existing stadium by stadiumId. Admin only. Merges existing fields with new body."""
+
     require_admin(event)
 
     existing = get_item(STADIUMS_TABLE, {'stadiumId': stadium_id})
@@ -117,6 +135,9 @@ def _update_stadium(event: dict, stadium_id: str):
 
 
 def _delete_stadium(event: dict, stadium_id: str):
+
+    """Delete a stadium by stadiumId. Admin only. Returns 404 if not found."""
+
     require_admin(event)
 
     existing = get_item(STADIUMS_TABLE, {'stadiumId': stadium_id})

@@ -6,7 +6,9 @@ dynamodb = boto3.resource('dynamodb')
 
 
 def main(event, context):
+
     """Cognito trigger — saves/syncs users to DynamoDB on confirmation and on every login."""
+    
     trigger = event.get('triggerSource', 'UNKNOWN')
     print(f'[trigger] triggerSource={trigger}')
 

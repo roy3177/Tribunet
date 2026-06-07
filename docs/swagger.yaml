@@ -1,0 +1,1139 @@
+openapi: 3.0.3
+info:
+  title: Tribunet API
+  description: |
+    REST API for the Tribunet Israeli Football Match Platform.
+
+    **Authentication:** All protected endpoints require a Cognito JWT token passed as
+    `Authorization: Bearer <token>` in the request header.
+
+    **Authorization levels:**
+    - **Public** — no token required
+    - **User** — any authenticated user
+    - **Admin** — authenticated user with `role = "admin"` in DynamoDB
+
+    **Base URL:** `https://<api-id>.execute-api.us-east-1.amazonaws.com/prod`
+  version: "1.0.0"
+  contact:
+    name: Tribunet Team
+    email: roymeoded2512@gmail.com
+
+servers:
+  - url: https://{apiId}.execute-api.us-east-1.amazonaws.com/{stage}
+    description: AWS API Gateway
+    variables:
+      apiId:
+        default: "xxxxxxxxxx"
+        description: API Gateway ID from SAM deploy output
+      stage:
+        default: prod
+        enum: [prod, dev]
+
+# ── Security Scheme ────────────────────────────────────────────────────────────
+components:
+  securitySchemes:
+    CognitoAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Amazon Cognito JWT token (id_token from Cognito User Pool)
+
+  # ── Reusable Schemas ─────────────────────────────────────────────────────────
+  schemas:
+
+    Match:
+      type: object
+      properties:
+        matchId:
+          type: string
+          format: uuid
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        homeTeam:
+          type: string
+          maxLength: 100
+          example: "Maccabi Tel Aviv"
+        awayTeam:
+          type: string
+          maxLength: 100
+          example: "Hapoel Beer Sheva"
+        date:
+          type: string
+          format: date
+          example: "2025-09-15"
+        time:
+          type: string
+          example: "20:00"
+        stadiumId:
+          type: string
+          format: uuid
+          example: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
+        stadiumName:
+          type: string
+          example: "Bloomfield Stadium"
+        league:
+          type: string
+          example: "Ligat Ha'Al"
+        hasTickets:
+          type: boolean
+          example: true
+        ticketUrl:
+          type: string
+          format: uri
+          example: "https://www.leaan.co.il/tickets"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-08-01T12:00:00Z"
+        ttl:
+          type: integer
+          description: Unix timestamp — DynamoDB auto-deletes the item after match day
+          example: 1757952000
+
+    MatchInput:
+      type: object
+      required: [homeTeam, awayTeam, date, time, stadiumId, league]
+      properties:
+        homeTeam:
+          type: string
+          maxLength: 100
+          example: "Maccabi Tel Aviv"
+        awayTeam:
+          type: string
+          maxLength: 100
+          example: "Hapoel Beer Sheva"
+        date:
+          type: string
+          format: date
+          example: "2025-09-15"
+        time:
+          type: string
+          example: "20:00"
+        stadiumId:
+          type: string
+          format: uuid
+          example: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
+        league:
+          type: string
+          example: "Ligat Ha'Al"
+        hasTickets:
+          type: boolean
+          default: false
+        ticketUrl:
+          type: string
+          format: uri
+          example: "https://www.leaan.co.il/tickets"
+
+    Stadium:
+      type: object
+      properties:
+        stadiumId:
+          type: string
+          format: uuid
+          example: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d"
+        name:
+          type: string
+          maxLength: 100
+          example: "Bloomfield Stadium"
+        city:
+          type: string
+          example: "Tel Aviv"
+        lat:
+          type: number
+          format: float
+          minimum: -90
+          maximum: 90
+          example: 32.0553
+        lng:
+          type: number
+          format: float
+          minimum: -180
+          maximum: 180
+          example: 34.7598
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-01-01T00:00:00Z"
+
+    StadiumInput:
+      type: object
+      required: [name, city, lat, lng]
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          example: "Bloomfield Stadium"
+        city:
+          type: string
+          example: "Tel Aviv"
+        lat:
+          type: number
+          example: 32.0553
+        lng:
+          type: number
+          example: 34.7598
+
+    Team:
+      type: object
+      properties:
+        teamId:
+          type: string
+          format: uuid
+          example: "c0d8e5f0-1234-5678-abcd-ef0123456789"
+        name:
+          type: string
+          example: "Maccabi Tel Aviv"
+        league:
+          type: string
+          example: "Ligat Ha'Al"
+        city:
+          type: string
+          example: "Tel Aviv"
+        createdAt:
+          type: string
+          format: date-time
+
+    TeamInput:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Maccabi Tel Aviv"
+        league:
+          type: string
+          example: "Ligat Ha'Al"
+        city:
+          type: string
+          example: "Tel Aviv"
+
+    League:
+      type: object
+      properties:
+        leagueId:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-0000-0000-0000-111111111111"
+        name:
+          type: string
+          example: "Ligat Ha'Al"
+        level:
+          type: integer
+          description: Division level — 1 = top flight
+          example: 1
+        type:
+          type: string
+          enum: [league, cup]
+          example: "league"
+        createdAt:
+          type: string
+          format: date-time
+
+    LeagueInput:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Ligat Ha'Al"
+        level:
+          type: integer
+          example: 1
+        type:
+          type: string
+          enum: [league, cup]
+          default: league
+
+    User:
+      type: object
+      properties:
+        userId:
+          type: string
+          description: Cognito sub (UUID)
+          example: "sub-uuid-from-cognito"
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        name:
+          type: string
+          example: "Roy Meoded"
+        role:
+          type: string
+          enum: [user, admin]
+          example: "user"
+        createdAt:
+          type: string
+          format: date-time
+
+    Favorite:
+      type: object
+      properties:
+        userId:
+          type: string
+        matchId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+    # ── Standard response envelopes ───────────────────────────────────────────
+    DataResponse:
+      type: object
+      properties:
+        data:
+          description: The returned resource or array
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Resource not found"
+
+  # ── Reusable Responses ───────────────────────────────────────────────────────
+  responses:
+    Unauthorized:
+      description: Missing or invalid JWT token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Unauthorized"
+
+    Forbidden:
+      description: Valid token but insufficient role (admin required)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Admin access required"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Match not found"
+
+    BadRequest:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Missing required field: homeTeam"
+
+    ServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Internal server error"
+
+# ── Paths ─────────────────────────────────────────────────────────────────────
+paths:
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # MATCHES
+  # ════════════════════════════════════════════════════════════════════════════
+
+  /matches:
+    get:
+      summary: List all matches
+      description: Returns a paginated list of matches. No authentication required.
+      operationId: listMatches
+      tags: [Matches]
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of matches to return (1–100, default 20)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: lastKey
+          in: query
+          description: Base64-encoded pagination cursor returned as `nextKey` from the previous page
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated list of matches
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      matches:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Match'
+                      nextKey:
+                        type: string
+                        nullable: true
+                        description: Pass as `lastKey` in the next request. null means last page.
+                      count:
+                        type: integer
+                        example: 20
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+    post:
+      summary: Create a match
+      description: Creates a new match. Requires admin role.
+      operationId: createMatch
+      tags: [Matches]
+      security:
+        - CognitoAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchInput'
+      responses:
+        "201":
+          description: Match created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Match'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+  /matches/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Match UUID
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      summary: Get a match by ID
+      operationId: getMatch
+      tags: [Matches]
+      responses:
+        "200":
+          description: Match found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Match'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+    put:
+      summary: Update a match
+      description: Updates an existing match. Requires admin role.
+      operationId: updateMatch
+      tags: [Matches]
+      security:
+        - CognitoAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MatchInput'
+      responses:
+        "200":
+          description: Match updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Match'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+    delete:
+      summary: Delete a match
+      description: Deletes a match. Requires admin role.
+      operationId: deleteMatch
+      tags: [Matches]
+      security:
+        - CognitoAuth: []
+      responses:
+        "204":
+          description: Match deleted
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # STADIUMS
+  # ════════════════════════════════════════════════════════════════════════════
+
+  /stadiums:
+    get:
+      summary: List all stadiums
+      operationId: listStadiums
+      tags: [Stadiums]
+      responses:
+        "200":
+          description: List of stadiums
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Stadium'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+    post:
+      summary: Create a stadium
+      description: Creates a new stadium. Requires admin role.
+      operationId: createStadium
+      tags: [Stadiums]
+      security:
+        - CognitoAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StadiumInput'
+      responses:
+        "201":
+          description: Stadium created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Stadium'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+  /stadiums/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Stadium UUID
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      summary: Get a stadium by ID
+      operationId: getStadium
+      tags: [Stadiums]
+      responses:
+        "200":
+          description: Stadium found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Stadium'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+    put:
+      summary: Update a stadium
+      description: Updates an existing stadium. Requires admin role.
+      operationId: updateStadium
+      tags: [Stadiums]
+      security:
+        - CognitoAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StadiumInput'
+      responses:
+        "200":
+          description: Stadium updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Stadium'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+    delete:
+      summary: Delete a stadium
+      description: Deletes a stadium. Requires admin role.
+      operationId: deleteStadium
+      tags: [Stadiums]
+      security:
+        - CognitoAuth: []
+      responses:
+        "204":
+          description: Stadium deleted
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # FAVORITES
+  # ════════════════════════════════════════════════════════════════════════════
+
+  /favorites:
+    get:
+      summary: Get current user's favorite matches
+      description: Returns the full match objects saved as favorites by the authenticated user.
+      operationId: getFavorites
+      tags: [Favorites]
+      security:
+        - CognitoAuth: []
+      responses:
+        "200":
+          description: List of favorite matches (full match objects)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Match'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+  /favorites/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Match UUID to add/remove from favorites
+        schema:
+          type: string
+          format: uuid
+
+    post:
+      summary: Add a match to favorites
+      operationId: addFavorite
+      tags: [Favorites]
+      security:
+        - CognitoAuth: []
+      responses:
+        "201":
+          description: Favorite added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Favorite'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+    delete:
+      summary: Remove a match from favorites
+      operationId: removeFavorite
+      tags: [Favorites]
+      security:
+        - CognitoAuth: []
+      responses:
+        "204":
+          description: Favorite removed
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # USERS
+  # ════════════════════════════════════════════════════════════════════════════
+
+  /users/me:
+    get:
+      summary: Get own profile
+      description: Returns the DynamoDB user record for the currently authenticated user. Creates the record on first call if it does not exist yet.
+      operationId: getMe
+      tags: [Users]
+      security:
+        - CognitoAuth: []
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+    put:
+      summary: Update own profile
+      description: Updates the `name` field of the currently authenticated user.
+      operationId: updateMe
+      tags: [Users]
+      security:
+        - CognitoAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  maxLength: 100
+                  example: "Roy Meoded"
+      responses:
+        "200":
+          description: Updated user profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+  /users:
+    get:
+      summary: List all users
+      description: Returns all user records from DynamoDB. Requires admin role.
+      operationId: listUsers
+      tags: [Users]
+      security:
+        - CognitoAuth: []
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+  /users/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: User UUID (Cognito sub)
+        schema:
+          type: string
+
+    delete:
+      summary: Delete a user
+      description: Deletes the user from both Cognito and DynamoDB. Requires admin role.
+      operationId: deleteUser
+      tags: [Users]
+      security:
+        - CognitoAuth: []
+      responses:
+        "200":
+          description: User deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      deleted:
+                        type: string
+                        description: The deleted user's UUID
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # TEAMS
+  # ════════════════════════════════════════════════════════════════════════════
+
+  /teams:
+    get:
+      summary: List all teams
+      description: Returns all teams sorted alphabetically by name.
+      operationId: listTeams
+      tags: [Teams]
+      responses:
+        "200":
+          description: List of teams
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Team'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+    post:
+      summary: Create a team
+      description: Creates a new team. Requires admin role.
+      operationId: createTeam
+      tags: [Teams]
+      security:
+        - CognitoAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamInput'
+      responses:
+        "201":
+          description: Team created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Team'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+  /teams/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Team UUID
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      summary: Get a team by ID
+      operationId: getTeam
+      tags: [Teams]
+      responses:
+        "200":
+          description: Team found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Team'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+    put:
+      summary: Update a team
+      description: Updates an existing team. Requires admin role.
+      operationId: updateTeam
+      tags: [Teams]
+      security:
+        - CognitoAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamInput'
+      responses:
+        "200":
+          description: Team updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Team'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+    delete:
+      summary: Delete a team
+      description: Deletes a team. Requires admin role.
+      operationId: deleteTeam
+      tags: [Teams]
+      security:
+        - CognitoAuth: []
+      responses:
+        "204":
+          description: Team deleted
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+  # ════════════════════════════════════════════════════════════════════════════
+  # LEAGUES
+  # ════════════════════════════════════════════════════════════════════════════
+
+  /leagues:
+    get:
+      summary: List all leagues
+      description: Returns all leagues sorted by level (1 = top flight).
+      operationId: listLeagues
+      tags: [Leagues]
+      responses:
+        "200":
+          description: List of leagues
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/League'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+    post:
+      summary: Create a league
+      description: Creates a new league. Requires admin role.
+      operationId: createLeague
+      tags: [Leagues]
+      security:
+        - CognitoAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeagueInput'
+      responses:
+        "201":
+          description: League created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/League'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+  /leagues/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: League UUID
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      summary: Get a league by ID
+      operationId: getLeague
+      tags: [Leagues]
+      responses:
+        "200":
+          description: League found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/League'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+    put:
+      summary: Update a league
+      description: Updates an existing league. Requires admin role.
+      operationId: updateLeague
+      tags: [Leagues]
+      security:
+        - CognitoAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LeagueInput'
+      responses:
+        "200":
+          description: League updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/League'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+    delete:
+      summary: Delete a league
+      description: Deletes a league. Requires admin role.
+      operationId: deleteLeague
+      tags: [Leagues]
+      security:
+        - CognitoAuth: []
+      responses:
+        "204":
+          description: League deleted
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/ServerError'
+
+# ── Tags ──────────────────────────────────────────────────────────────────────
+tags:
+  - name: Matches
+    description: Football match management
+  - name: Stadiums
+    description: Stadium management
+  - name: Favorites
+    description: User saved matches
+  - name: Users
+    description: User profile and admin user management
+  - name: Teams
+    description: Football team management
+  - name: Leagues
+    description: League management

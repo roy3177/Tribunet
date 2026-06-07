@@ -8,6 +8,9 @@ from shared.db import LEAGUES_TABLE, put_item, get_item, delete_item, scan_with_
 
 
 def main(event, context):
+
+    """Lambda entry point for /leagues — routes GET / GET {id} / POST / PUT / DELETE handlers."""
+
     method    = event.get('requestContext', {}).get('http', {}).get('method', 'GET')
     route_key = event.get('routeKey', '')
 
@@ -36,11 +39,17 @@ def main(event, context):
 
 
 def _get_leagues():
+
+    """Return all leagues sorted by level ascending (1 = top flight)."""
+
     items = scan_with_filter(LEAGUES_TABLE)
     return response.ok(sorted(items, key=lambda x: x.get('level', 99)))
 
 
 def _get_league(league_id: str):
+
+    """Return a single league by leagueId. Returns 404 if not found."""
+
     item = get_item(LEAGUES_TABLE, {'leagueId': league_id})
     if not item:
         return response.not_found('League')
@@ -48,6 +57,9 @@ def _get_league(league_id: str):
 
 
 def _create_league(event: dict):
+
+    """Create a new league. Admin only."""
+
     require_admin(event)
     body = json.loads(event.get('body') or '{}')
     item = {
@@ -62,6 +74,9 @@ def _create_league(event: dict):
 
 
 def _update_league(event: dict, league_id: str):
+
+    """Update an existing league by leagueId. Admin only. Merges existing fields with new body."""
+
     require_admin(event)
     existing = get_item(LEAGUES_TABLE, {'leagueId': league_id})
     if not existing:
@@ -73,6 +88,9 @@ def _update_league(event: dict, league_id: str):
 
 
 def _delete_league(event: dict, league_id: str):
+
+    """Delete a league by leagueId. Admin only. Returns 404 if not found."""
+
     require_admin(event)
     existing = get_item(LEAGUES_TABLE, {'leagueId': league_id})
     if not existing:

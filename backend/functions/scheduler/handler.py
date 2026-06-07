@@ -10,6 +10,9 @@ _sns    = boto3.client('sns',      region_name=os.environ.get('AWS_REGION', 'us-
 
 
 def main(event, context):
+
+    """EventBridge weekly trigger — scans all matches and sends a Hebrew summary report via SNS."""
+
     today     = datetime.now(timezone.utc).date()
     week_end  = today + timedelta(days=7)
     next_end  = today + timedelta(days=14)

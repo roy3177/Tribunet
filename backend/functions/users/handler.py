@@ -7,6 +7,9 @@ from shared.db import USERS_TABLE, scan_with_filter, get_item, put_item, delete_
 _cognito = None
 
 def get_cognito():
+
+    """Return a cached boto3 Cognito client (lazy initialization)."""
+
     global _cognito
     if _cognito is None:
         _cognito = boto3.client('cognito-idp', region_name=os.environ['AWS_REGION'])
@@ -14,6 +17,9 @@ def get_cognito():
 
 
 def main(event, context):
+
+    """Lambda entry point for /users — routes GET /me, PUT /me, GET /users, DELETE /users/{id}."""
+
     method    = event.get('requestContext', {}).get('http', {}).get('method', 'GET')
     route_key = event.get('routeKey', '')
 
@@ -40,6 +46,9 @@ def main(event, context):
 
 
 def _get_me(event: dict):
+
+    """Return the current user's profile. Auto-creates a DynamoDB record on first login."""
+
     from datetime import datetime, timezone
     claims  = get_claims(event)
     user_id = claims.get('sub', '')
@@ -63,6 +72,9 @@ def _get_me(event: dict):
 
 
 def _update_me(event: dict):
+
+    """Update the current user's display name. Returns 400 if name is empty or too long."""
+
     import json
     claims  = get_claims(event)
     user_id = claims.get('sub', '')
@@ -86,12 +98,18 @@ def _update_me(event: dict):
 
 
 def _get_users(event: dict):
+
+    """Return all users from DynamoDB. Admin only."""
+
     require_admin(event)
     items = scan_with_filter(USERS_TABLE)
     return response.ok(items)
 
 
 def _delete_user(event: dict):
+
+    """Delete a user from both Cognito and DynamoDB by userId. Admin only."""
+
     require_admin(event)
 
     user_id = event.get('pathParameters', {}).get('id', '').strip()
