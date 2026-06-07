@@ -172,18 +172,5 @@ pytest tests/ -v
 
 For full step-by-step deployment instructions see [INSTALLATION.md](INSTALLATION.md).
 
-## Documentation
-
-| Document | Description |
-|----------|-------------|
-| [DEVELOPER_REFERENCE.md](docs/DEVELOPER_REFERENCE.md) | Boto3-style reference for all 8 Lambda functions and 3 shared modules |
-| [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) | Local setup, testing, deployment, and extending the system |
-| [USER_GUIDE.md](docs/USER_GUIDE.md) | End-user manual for all platform features |
-| [ADMIN_GUIDE.md](docs/ADMIN_GUIDE.md) | Admin operations: matches, stadiums, users, monitoring |
-| [RISK_ANALYSIS.md](docs/RISK_ANALYSIS.md) | Security, data, scalability, and operational risks |
-| [COST_ESTIMATION.md](docs/COST_ESTIMATION.md) | AWS monthly cost breakdown for demo and production scale |
-| [swagger.yaml](docs/swagger.yaml) | Full OpenAPI 3.0 specification |
-
----
 
 *Built as a final academic project demonstrating production-grade AWS Serverless architecture.*
