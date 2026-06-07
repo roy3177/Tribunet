@@ -63,7 +63,7 @@ A serverless web platform for football fans in Israel. Browse upcoming matches o
 
 ## Architecture
 
-![Tribunet AWS Architecture](frontend\src\assets\images\architecture.png)
+![Tribunet AWS Architecture](frontend/src/assets/images/architecture.png)
 
 ---
 
