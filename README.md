@@ -152,7 +152,6 @@ Base URL: `https://XXXXXXXXXX.execute-api.us-east-1.amazonaws.com/prod`
 
 Full Swagger documentation: [docs/swagger.yaml](docs/swagger.yaml)
 
-Full developer API reference: [docs/DEVELOPER_REFERENCE.md](docs/DEVELOPER_REFERENCE.md)
 
 ---
 
