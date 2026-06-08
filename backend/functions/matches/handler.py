@@ -1,3 +1,20 @@
+""""
+@ author: Roy Meoded
+@ author: Yarin Keshet
+@ author: Tomer Gal
+
+@ date: 08-06-2026
+
+matches/handler.py — Match CRUD Lambda
+=======================================
+Handles all /matches endpoints via a single Lambda entry point (main).
+Routes requests based on routeKey injected by API Gateway HTTP API.
+
+Public:   GET /matches, GET /matches/{id}
+Admin:    POST /matches, PUT /matches/{id}, DELETE /matches/{id}
+"""
+
+
 import json
 import uuid
 import base64
@@ -10,11 +27,11 @@ from shared.db import (
     put_item, get_item, delete_item, scan_with_filter, scan_page,
 )
 
+# Fields that must be present and non-empty on every match create/update:
 REQUIRED_FIELDS = ['homeTeam', 'awayTeam', 'date', 'time', 'stadiumId', 'league']
 
+# Validate match fields. Returns an error message string or None if valid:
 def _validate_match(body: dict) -> str | None:
-
-    """Validate match fields. Returns an error message string or None if valid."""
     
     for field in REQUIRED_FIELDS:
         if not body.get(field, '').strip():
@@ -33,10 +50,8 @@ def _validate_match(body: dict) -> str | None:
         return 'ticketUrl must be a valid URL'
     return None
 
-
+# Lambda entry point for /matches — routes to GET / GET {id} / POST / PUT / DELETE handlers:
 def main(event, context):
-
-    """Lambda entry point for /matches — routes to GET / GET {id} / POST / PUT / DELETE handlers."""
 
     method    = event.get('requestContext', {}).get('http', {}).get('method', 'GET')
     route_key = event.get('routeKey', '')
@@ -64,15 +79,13 @@ def main(event, context):
         print(f'[matches] Unhandled error: {e}')
         return response.server_error()
 
-
+# Return a paginated list of matches. Supports limit and base64 lastKey cursor:
 def _get_matches(event: dict):
-
-    """Return a paginated list of matches. Supports limit and base64 lastKey cursor."""
 
     params = event.get('queryStringParameters') or {}
     limit = min(int(params.get('limit', 20)), 100)  # cap at 100
 
-    # Decode cursor from frontend
+    # Decode cursor from frontend:
     last_key = None
     raw_cursor = params.get('lastKey')
     if raw_cursor:
@@ -96,20 +109,16 @@ def _get_matches(event: dict):
         'count': len(result['items'])
     })
 
-
+# Return a single match by matchId. Returns 404 if not found:
 def _get_match(match_id: str):
         
-    """Return a single match by matchId. Returns 404 if not found."""
-
     item = get_item(MATCHES_TABLE, {'matchId': match_id})
     if not item:
         return response.not_found('Match')
     return response.ok(item)
 
-
+# Create a new match. Admin only. Validates fields and resolves stadiumName from stadiumId:
 def _create_match(event: dict):
-
-    """Create a new match. Admin only. Validates fields and resolves stadiumName from stadiumId."""
 
     require_admin(event)
     body = json.loads(event.get('body') or '{}')
@@ -140,10 +149,8 @@ def _create_match(event: dict):
     put_item(MATCHES_TABLE, item)
     return response.created(item)
 
-
+# Update an existing match by matchId. Admin only. Merges existing fields with new body:
 def _update_match(event: dict, match_id: str):
-
-    """Update an existing match by matchId. Admin only. Merges existing fields with new body."""
 
     require_admin(event)
 
@@ -167,11 +174,9 @@ def _update_match(event: dict, match_id: str):
     put_item(MATCHES_TABLE, merged)
     return response.ok(merged)
 
-
+# Delete a match by matchId. Admin only. Returns 404 if not found:
 def _delete_match(event: dict, match_id: str):
         
-    """Delete a match by matchId. Admin only. Returns 404 if not found."""
-
     require_admin(event)
 
     existing = get_item(MATCHES_TABLE, {'matchId': match_id})
@@ -181,21 +186,17 @@ def _delete_match(event: dict, match_id: str):
     delete_item(MATCHES_TABLE, {'matchId': match_id})
     return response.no_content()
 
-
+# Calculate Unix TTL timestamp — one day after match date for DynamoDB auto-expiry:
 def _compute_ttl(date_str: str) -> int:
         
-    """Calculate Unix TTL timestamp — one day after match date for DynamoDB auto-expiry."""
-
     if not date_str:
         return 0
     dt = datetime.strptime(date_str, '%Y-%m-%d').replace(tzinfo=timezone.utc)
     return int((dt + timedelta(days=1)).timestamp())
 
-
+# Fetch stadium name from DynamoDB by stadiumId. Returns empty string if not found:
 def _resolve_stadium_name(stadium_id: str) -> str:
     
-    """Fetch stadium name from DynamoDB by stadiumId. Returns empty string if not found."""
-
     if not stadium_id:
         return ''
     stadium = get_item(STADIUMS_TABLE, {'stadiumId': stadium_id})
