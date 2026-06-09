@@ -1,3 +1,19 @@
+"""
+@ author: Roy Meoded
+@ author: Yarin Keshet
+@ author: Tomer Gal
+
+@ date: 08-06-2026
+
+leagues/handler.py — Leagues CRUD Lambda
+==========================================
+Handles all /leagues endpoints via a single Lambda entry point (main).
+Leagues are sorted by level (1 = top flight) and used to populate filter dropdowns.
+
+Public:  GET /leagues, GET /leagues/{id}
+Admin:   POST /leagues, PUT /leagues/{id}, DELETE /leagues/{id}
+"""
+
 import json
 import uuid
 from datetime import datetime, timezone
@@ -7,9 +23,8 @@ from shared.auth import require_admin
 from shared.db import LEAGUES_TABLE, put_item, get_item, delete_item, scan_with_filter
 
 
+# Lambda entry point for /leagues — routes GET / GET {id} / POST / PUT / DELETE handlers:
 def main(event, context):
-
-    """Lambda entry point for /leagues — routes GET / GET {id} / POST / PUT / DELETE handlers."""
 
     method    = event.get('requestContext', {}).get('http', {}).get('method', 'GET')
     route_key = event.get('routeKey', '')
@@ -38,34 +53,30 @@ def main(event, context):
         return response.server_error()
 
 
+# Return all leagues sorted by level ascending (1 = top flight):
 def _get_leagues():
-
-    """Return all leagues sorted by level ascending (1 = top flight)."""
-
     items = scan_with_filter(LEAGUES_TABLE)
+    # level=1 is the premier league, higher numbers = lower divisions.
+    # Default to 99 so leagues without a level appear last.
     return response.ok(sorted(items, key=lambda x: x.get('level', 99)))
 
 
+# Return a single league by leagueId. Returns 404 if not found:
 def _get_league(league_id: str):
-
-    """Return a single league by leagueId. Returns 404 if not found."""
-
     item = get_item(LEAGUES_TABLE, {'leagueId': league_id})
     if not item:
         return response.not_found('League')
     return response.ok(item)
 
 
+# Create a new league. Admin only:
 def _create_league(event: dict):
-
-    """Create a new league. Admin only."""
-
     require_admin(event)
     body = json.loads(event.get('body') or '{}')
     item = {
         'leagueId':  str(uuid.uuid4()),
         'name':      body.get('name', ''),
-        'level':     body.get('level', 1),
+        'level':     body.get('level', 1),   # 1 = top division
         'type':      body.get('type', 'league'),
         'createdAt': datetime.now(timezone.utc).isoformat(),
     }
@@ -73,24 +84,21 @@ def _create_league(event: dict):
     return response.created(item)
 
 
+# Update an existing league by leagueId. Admin only. Merges existing fields with new body:
 def _update_league(event: dict, league_id: str):
-
-    """Update an existing league by leagueId. Admin only. Merges existing fields with new body."""
-
     require_admin(event)
     existing = get_item(LEAGUES_TABLE, {'leagueId': league_id})
     if not existing:
         return response.not_found('League')
     body    = json.loads(event.get('body') or '{}')
+    # leagueId is always locked to the path parameter — prevents accidental ID changes.
     updated = {**existing, **body, 'leagueId': league_id}
     put_item(LEAGUES_TABLE, updated)
     return response.ok(updated)
 
 
+# Delete a league by leagueId. Admin only. Returns 404 if not found:
 def _delete_league(event: dict, league_id: str):
-
-    """Delete a league by leagueId. Admin only. Returns 404 if not found."""
-
     require_admin(event)
     existing = get_item(LEAGUES_TABLE, {'leagueId': league_id})
     if not existing:

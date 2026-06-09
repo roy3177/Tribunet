@@ -1,6 +1,26 @@
+""""
+@ author: Roy Meoded
+@ author: Yarin Keshet
+@ author: Tomer Gal
+
+@ date: 08-06-2026
+
+stadiums/handler.py — Stadium CRUD Lambda
+==========================================
+Handles all /stadiums endpoints via a single Lambda entry point (main).
+Stadiums store geographic coordinates (lat/lng) as Decimal — required by DynamoDB
+since it does not support Python's native float type.
+
+Public:  GET /stadiums, GET /stadiums/{id}
+Admin:   POST /stadiums, PUT /stadiums/{id}, DELETE /stadiums/{id}
+
+"""
+
+
+
 import json
 import uuid
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from datetime import datetime, timezone
 
 from shared import response
@@ -10,9 +30,9 @@ from shared.db import (
     put_item, get_item, delete_item, scan_with_filter,
 )
 
-def _validate_stadium(body: dict) -> str | None:
+#  Validate stadium fields. Returns an error message string or None if valid:
 
-    """Validate stadium fields. Returns an error message string or None if valid."""
+def _validate_stadium(body: dict) -> str | None:
 
     if not body.get('name', '').strip():
         return 'Missing required field: name'
@@ -34,10 +54,8 @@ def _validate_stadium(body: dict) -> str | None:
         return 'lng must be a valid number'
     return None
 
-
+# Lambda entry point for /stadiums — routes to GET / GET {id} / POST / PUT / DELETE handlers:
 def main(event, context):
-
-    """Lambda entry point for /stadiums — routes to GET / GET {id} / POST / PUT / DELETE handlers."""
 
     method    = event.get('requestContext', {}).get('http', {}).get('method', 'GET')
     route_key = event.get('routeKey', '')
@@ -65,28 +83,22 @@ def main(event, context):
         print(f'[stadiums] Unhandled error: {e}')
         return response.server_error()
 
-
+# Return all stadiums as a list:
 def _get_stadiums():
-
-    """Return all stadiums as a list."""
 
     items = scan_with_filter(STADIUMS_TABLE)
     return response.ok(items)
 
-
+# Return a single stadium by stadiumId. Returns 404 if not found:
 def _get_stadium(stadium_id: str):
-
-    """Return a single stadium by stadiumId. Returns 404 if not found."""
 
     item = get_item(STADIUMS_TABLE, {'stadiumId': stadium_id})
     if not item:
         return response.not_found('Stadium')
     return response.ok(item)
 
-
+# Create a new stadium. Admin only. Stores lat/lng as Decimal for DynamoDB compatibility:
 def _create_stadium(event: dict):
-
-    """Create a new stadium. Admin only. Stores lat/lng as Decimal for DynamoDB compatibility."""
 
     require_admin(event)
     body = json.loads(event.get('body') or '{}')
@@ -106,11 +118,8 @@ def _create_stadium(event: dict):
     put_item(STADIUMS_TABLE, item)
     return response.created(item)
 
-
+# Update an existing stadium by stadiumId. Admin only. Returns 404 if not found. Merges provided fields with existing item, allowing partial updates. Validates merged result before saving:
 def _update_stadium(event: dict, stadium_id: str):
-
-    """Update an existing stadium by stadiumId. Admin only. Merges existing fields with new body."""
-
     require_admin(event)
 
     existing = get_item(STADIUMS_TABLE, {'stadiumId': stadium_id})
@@ -133,10 +142,8 @@ def _update_stadium(event: dict, stadium_id: str):
     put_item(STADIUMS_TABLE, merged)
     return response.ok(merged)
 
-
+# Delete a stadium by stadiumId. Admin only. Returns 404 if not found:
 def _delete_stadium(event: dict, stadium_id: str):
-
-    """Delete a stadium by stadiumId. Admin only. Returns 404 if not found."""
 
     require_admin(event)
 

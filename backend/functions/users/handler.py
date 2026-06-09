@@ -1,3 +1,20 @@
+"""
+@ author: Roy Meoded
+@ author: Yarin Keshet
+@ author: Tomer Gal
+
+@ date: 08-06-2026
+users/handler.py — User Management Lambda
+==========================================
+Handles user profile and admin user-management endpoints.
+User data lives in two places: Cognito (authentication) and DynamoDB (profile + role).
+Deleting a user removes them from both systems.
+
+User:   GET /users/me, PUT /users/me
+Admin:  GET /users, DELETE /users/{id}
+
+"""
+
 import os
 import boto3
 from shared import response
@@ -6,19 +23,15 @@ from shared.db import USERS_TABLE, scan_with_filter, get_item, put_item, delete_
 
 _cognito = None
 
+# Return a cached boto3 Cognito client (lazy initialization):
 def get_cognito():
-
-    """Return a cached boto3 Cognito client (lazy initialization)."""
-
     global _cognito
     if _cognito is None:
         _cognito = boto3.client('cognito-idp', region_name=os.environ['AWS_REGION'])
     return _cognito
 
-
+# Lambda entry point for /users — routes GET /me, PUT /me, GET /users, DELETE /users/{id}:
 def main(event, context):
-
-    """Lambda entry point for /users — routes GET /me, PUT /me, GET /users, DELETE /users/{id}."""
 
     method    = event.get('requestContext', {}).get('http', {}).get('method', 'GET')
     route_key = event.get('routeKey', '')
@@ -44,10 +57,8 @@ def main(event, context):
         print(f'[users] Unhandled error: {e}')
         return response.server_error()
 
-
+# Return the current user's profile. Auto-creates a DynamoDB record on first login:
 def _get_me(event: dict):
-
-    """Return the current user's profile. Auto-creates a DynamoDB record on first login."""
 
     from datetime import datetime, timezone
     claims  = get_claims(event)
@@ -56,8 +67,10 @@ def _get_me(event: dict):
         return response.bad_request('Missing user id in token')
     item = get_item(USERS_TABLE, {'userId': user_id})
     if not item:
-        # User confirmed in Cognito but not yet in DynamoDB — create on first login
+        # User exists in Cognito but not yet in DynamoDB (e.g. Cognito trigger failed).
+        # Auto-create their profile on first GET /users/me so the app never breaks.
         email = claims.get('email', '')
+        # Fallback name: use the part before '@' in the email if Cognito name is missing.
         name  = claims.get('name', email.split('@')[0])
         item  = {
             'userId':    user_id,
@@ -70,11 +83,8 @@ def _get_me(event: dict):
         print(f'[users] Auto-created DynamoDB record for {email}')
     return response.ok(item)
 
-
+# Update the current user's display name. Returns 400 if name is empty or too long:
 def _update_me(event: dict):
-
-    """Update the current user's display name. Returns 400 if name is empty or too long."""
-
     import json
     claims  = get_claims(event)
     user_id = claims.get('sub', '')
@@ -96,19 +106,14 @@ def _update_me(event: dict):
     put_item(USERS_TABLE, updated)
     return response.ok(updated)
 
-
+# Return all users from DynamoDB. Admin only:
 def _get_users(event: dict):
-
-    """Return all users from DynamoDB. Admin only."""
-
     require_admin(event)
     items = scan_with_filter(USERS_TABLE)
     return response.ok(items)
 
-
+# Delete a user from both Cognito and DynamoDB by userId. Admin only:
 def _delete_user(event: dict):
-
-    """Delete a user from both Cognito and DynamoDB by userId. Admin only."""
 
     require_admin(event)
 
@@ -117,11 +122,13 @@ def _delete_user(event: dict):
         return response.bad_request('Missing user id')
 
     try:
+        # Remove from Cognito first — uses the Cognito sub (UUID) as the Username.
         get_cognito().admin_delete_user(
             UserPoolId=os.environ['COGNITO_USER_POOL_ID'],
             Username=user_id,
         )
     except get_cognito().exceptions.UserNotFoundException:
+        # User already deleted from Cognito — still clean up DynamoDB.
         pass
 
     delete_item(USERS_TABLE, {'userId': user_id})
