@@ -1,17 +1,28 @@
+/**
+ * @author Roy Meoded
+ * @author Yarin Keshet
+ * @author Tomer Gal
+ *
+ * @date 08-06-2026
+ *
+ * NotFoundPage.jsx — 404 Not Found Page
+ * ======================================
+ * Catch-all route rendered when no other route matches.
+ * Displays a large "404" number, a Hebrew error message, and a button
+ * that navigates back to the home page (/).
+ */
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Home } from 'lucide-react'
 import { pageVariants, fadeIn, cardVariants } from '../animations/variants'
 
+// Renders the 404 page with an animated error message and a home navigation button.
 export default function NotFoundPage() {
   const navigate = useNavigate()
 
   return (
     <motion.div
-      variants={pageVariants}
-      initial="initial"
-      animate="animate"
-      exit="exit"
+      variants={pageVariants} initial="initial" animate="animate" exit="exit"
       className="flex flex-col items-center justify-center min-h-[70vh] px-4 text-center"
     >
       <motion.div variants={fadeIn} initial="hidden" animate="visible">
@@ -23,15 +34,12 @@ export default function NotFoundPage() {
         <p className="text-dark-400 text-sm mb-8 max-w-xs">
           הדף שחיפשת לא קיים או הוסר. ייתכן שהלינק שגוי.
         </p>
-
         <motion.button
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.97 }}
+          whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
           onClick={() => navigate('/')}
           className="btn-primary flex items-center gap-2 mx-auto"
         >
-          <Home size={16} />
-          חזרה לדף הבית
+          <Home size={16} /> חזרה לדף הבית
         </motion.button>
       </motion.div>
     </motion.div>

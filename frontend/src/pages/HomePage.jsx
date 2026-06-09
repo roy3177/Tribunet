@@ -81,10 +81,7 @@ function MatchCard({ match, index }) {
       transition={{ duration: 0.2 }}
       className="card group cursor-pointer relative overflow-hidden"
     >
-      {/* Green accent bar */}
       <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-pitch-600 to-transparent" />
-
-      {/* League badge */}
       <div className="flex justify-between items-start mb-4">
         <span className="badge-green">{match.league}</span>
         <span className={`badge ${match.hasTickets ? 'badge-green' : 'badge-red'}`}>
@@ -92,21 +89,15 @@ function MatchCard({ match, index }) {
           {match.hasTickets ? 'יש כרטיסים' : 'אזל'}
         </span>
       </div>
-
-      {/* Teams */}
       <div className="flex items-center justify-between gap-3 mb-5">
         <span className="text-white font-bold text-lg text-right leading-tight flex-1">{match.homeTeam}</span>
         <span className="text-dark-500 font-bold text-sm shrink-0">נגד</span>
         <span className="text-white font-bold text-lg text-left leading-tight flex-1">{match.awayTeam}</span>
       </div>
-
-      {/* Details */}
       <div className="flex items-center justify-between text-sm text-dark-400 border-t border-dark-800 pt-4">
         <span>{dateStr} · {match.time}</span>
         <span>{match.stadium}</span>
       </div>
-
-      {/* Hover CTA */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         whileHover={{ opacity: 1, y: 0 }}
@@ -187,15 +178,12 @@ export default function HomePage() {
 
       {/* ── Hero ───────────────────────────────────────────────────────────── */}
       <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden px-4">
-        {/* Background image */}
         <div className="absolute inset-0 pointer-events-none">
           <img src={homeImage} alt="" className="w-full h-full object-cover object-center" />
           <div className="absolute inset-0 bg-dark-950/60" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-dark-950" />
         </div>
-
         <div className="relative z-10 text-center max-w-3xl mx-auto">
-          {/* Badge */}
           <motion.div
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -204,8 +192,6 @@ export default function HomePage() {
           >
             <img src={stadiumIcon} alt="stadium" className="w-3.5 h-3.5" /> כדורגל ישראל
           </motion.div>
-
-          {/* Headline */}
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
@@ -217,7 +203,6 @@ export default function HomePage() {
               Tri<span className="text-pitch-500">bu</span>net
             </h1>
           </motion.div>
-
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -226,8 +211,6 @@ export default function HomePage() {
           >
             מפת המשחקים של כדורגל ישראל — מצא, סנן, וקנה כרטיסים בקלות
           </motion.p>
-
-          {/* CTA buttons */}
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
@@ -260,7 +243,6 @@ export default function HomePage() {
 
       {/* ── Featured Matches ────────────────────────────────────────────────── */}
       <section ref={matchesRef} className="relative py-16">
-        {/* Background image — reveals on scroll */}
         <motion.div
           className="absolute inset-0 pointer-events-none"
           initial={{ opacity: 0 }}
@@ -273,55 +255,53 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-b from-dark-950 via-transparent to-dark-950/70" />
         </motion.div>
         <div className="relative z-10 max-w-7xl mx-auto px-4">
-        <motion.div
-          variants={fadeIn}
-          initial="hidden"
-          animate={inView ? 'visible' : 'hidden'}
-          className="flex items-center justify-between mb-8"
-        >
-          <div>
-            <h2 className="text-2xl font-bold text-white">משחקים קרובים</h2>
-            <p className="text-dark-400 text-sm mt-1">המשחקים הבאים בליגת העל</p>
-          </div>
-          <Link to="/map" className="text-pitch-400 hover:text-pitch-300 text-sm font-medium flex items-center gap-1 transition-colors">
-            כל המשחקים <ArrowRight size={14} />
-          </Link>
-        </motion.div>
-
-        {matchesLoading ? (
-          <div className="flex justify-center items-center py-16 text-dark-400">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              className="w-6 h-6 border-2 border-pitch-500 border-t-transparent rounded-full mr-3"
-            />
-            טוען משחקים...
-          </div>
-        ) : featuredMatches.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-dark-400 mb-4">אין משחקים קרובים כרגע</p>
-            <Link to="/map" className="text-pitch-400 hover:text-pitch-300 text-sm font-medium transition-colors">
-              ראה את כל המשחקים במפה <ArrowRight size={14} className="inline" />
-            </Link>
-          </div>
-        ) : (
           <motion.div
-            variants={staggerContainer}
+            variants={fadeIn}
             initial="hidden"
             animate={inView ? 'visible' : 'hidden'}
-            className="grid md:grid-cols-3 gap-5"
+            className="flex items-center justify-between mb-8"
           >
-            {featuredMatches.map((match, i) => (
-              <MatchCard key={match.id} match={match} index={i} />
-            ))}
+            <div>
+              <h2 className="text-2xl font-bold text-white">משחקים קרובים</h2>
+              <p className="text-dark-400 text-sm mt-1">המשחקים הבאים בליגת העל</p>
+            </div>
+            <Link to="/map" className="text-pitch-400 hover:text-pitch-300 text-sm font-medium flex items-center gap-1 transition-colors">
+              כל המשחקים <ArrowRight size={14} />
+            </Link>
           </motion.div>
-        )}
+          {matchesLoading ? (
+            <div className="flex justify-center items-center py-16 text-dark-400">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                className="w-6 h-6 border-2 border-pitch-500 border-t-transparent rounded-full mr-3"
+              />
+              טוען משחקים...
+            </div>
+          ) : featuredMatches.length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-dark-400 mb-4">אין משחקים קרובים כרגע</p>
+              <Link to="/map" className="text-pitch-400 hover:text-pitch-300 text-sm font-medium transition-colors">
+                ראה את כל המשחקים במפה <ArrowRight size={14} className="inline" />
+              </Link>
+            </div>
+          ) : (
+            <motion.div
+              variants={staggerContainer}
+              initial="hidden"
+              animate={inView ? 'visible' : 'hidden'}
+              className="grid md:grid-cols-3 gap-5"
+            >
+              {featuredMatches.map((match, i) => (
+                <MatchCard key={match.id} match={match} index={i} />
+              ))}
+            </motion.div>
+          )}
         </div>
       </section>
 
       {/* ── Features ────────────────────────────────────────────────────────── */}
       <section className="relative py-16 border-t border-dark-800/50">
-        {/* Background image — reveals on scroll */}
         <motion.div
           className="absolute inset-0 pointer-events-none"
           initial={{ opacity: 0 }}
@@ -334,24 +314,23 @@ export default function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-b from-dark-950 via-transparent to-dark-950/70" />
         </motion.div>
         <div className="relative z-10 max-w-7xl mx-auto px-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-60px' }}
-          transition={{ duration: 0.4 }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-3xl font-bold text-white mb-3">כל מה שצריך</h2>
-          <p className="text-dark-400 max-w-lg mx-auto">
-            פלטפורמה מודרנית לחובבי כדורגל — חפש, סנן ועקוב אחרי המשחקים שלך
-          </p>
-        </motion.div>
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {FEATURES.map((f, i) => (
-            <FeatureCard key={f.title} feature={f} index={i} />
-          ))}
-        </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: 0.4 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl font-bold text-white mb-3">כל מה שצריך</h2>
+            <p className="text-dark-400 max-w-lg mx-auto">
+              פלטפורמה מודרנית לחובבי כדורגל — חפש, סנן ועקוב אחרי המשחקים שלך
+            </p>
+          </motion.div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {FEATURES.map((f, i) => (
+              <FeatureCard key={f.title} feature={f} index={i} />
+            ))}
+          </div>
         </div>
       </section>
 

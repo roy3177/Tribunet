@@ -1,3 +1,21 @@
+/**
+ * @author Roy Meoded
+ * @author Yarin Keshet
+ * @author Tomer Gal
+ *
+ * @date 08-06-2026
+ *
+ * RegisterPage.jsx — User Registration Page
+ * ==========================================
+ * Handles the two-step registration flow:
+ *   Step 1 (RegisterForm)  — collects name, email, password with live validation
+ *                            and password-strength indicator, then calls Cognito signUp.
+ *   Step 2 (ConfirmForm)   — prompts for the 6-digit email verification code
+ *                            and confirms the account via Cognito.
+ *
+ * On success the user is redirected to /login.
+ * If the email already exists and is unconfirmed, a new code is resent automatically.
+ */
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -13,6 +31,7 @@ const inputVariants = {
   }),
 }
 
+// Reusable animated input field with optional password show/hide toggle and inline error message.
 function InputField({ id, label, type, value, onChange, icon: Icon, custom, error, autoComplete }) {
   const [show, setShow] = useState(false)
   const isPassword = type === 'password'
@@ -53,6 +72,8 @@ function InputField({ id, label, type, value, onChange, icon: Icon, custom, erro
   )
 }
 
+// Displays live password strength indicators for length, uppercase, lowercase,
+// digit, and special character requirements. Returns null when password is empty.
 function PasswordStrength({ password }) {
   const checks = [
     { label: 'לפחות 8 תווים', ok: password.length >= 8 },
@@ -77,6 +98,10 @@ function PasswordStrength({ password }) {
 }
 
 // ─── Step 1: Register form ────────────────────────────────────────────────────
+
+// Step 1 form: collects name, email, password, and confirmation.
+// Validates all fields, calls Cognito register, and advances to the confirm step.
+// If the email already exists but is unconfirmed, resends the verification code.
 function RegisterForm({ onSuccess }) {
   const [name, setName]         = useState('')
   const [email, setEmail]       = useState('')
@@ -87,6 +112,7 @@ function RegisterForm({ onSuccess }) {
   const [loading, setLoading]   = useState(false)
   const { register, resendCode } = useAuth()
 
+  // Validates all registration fields. Returns true if valid, false otherwise.
   function validate() {
     const e = {}
     if (!name.trim())  e.name = 'נדרש שם מלא'
@@ -103,6 +129,7 @@ function RegisterForm({ onSuccess }) {
     return Object.keys(e).length === 0
   }
 
+  // Handles form submission: validates, calls register, then advances to confirm step.
   async function handleSubmit(e) {
     e.preventDefault()
     setApiError('')
@@ -176,6 +203,9 @@ function RegisterForm({ onSuccess }) {
 }
 
 // ─── Step 2: Email confirmation ───────────────────────────────────────────────
+
+// Step 2 form: collects the 6-digit verification code sent to the user's email
+// and confirms the Cognito account. Redirects to /login on success.
 function ConfirmForm({ email }) {
   const [code, setCode]         = useState('')
   const [error, setError]       = useState('')
@@ -184,6 +214,7 @@ function ConfirmForm({ email }) {
   const { confirmRegistration } = useAuth()
   const navigate                = useNavigate()
 
+  // Submits the verification code to Cognito and redirects to /login on success.
   async function handleSubmit(e) {
     e.preventDefault()
     setApiError('')
@@ -197,7 +228,7 @@ function ConfirmForm({ email }) {
       const errName = err?.name ?? ''
       if (errName === 'CodeMismatchException') setApiError('קוד שגוי, נסה שוב')
       else if (errName === 'ExpiredCodeException') setApiError('הקוד פג תוקף — בקש קוד חדש')
-      else if (errName === 'NotAuthorizedException') navigate('/login') // already confirmed
+      else if (errName === 'NotAuthorizedException') navigate('/login')
       else setApiError('שגיאה באימות, נסה שוב')
     } finally {
       setLoading(false)
@@ -249,6 +280,9 @@ function ConfirmForm({ email }) {
 }
 
 // ─── Root component ───────────────────────────────────────────────────────────
+
+// Root component: controls which step is shown (register or confirm)
+// by tracking the email after successful step 1 submission.
 export default function RegisterPage() {
   const [confirmedEmail, setConfirmedEmail] = useState(null)
 

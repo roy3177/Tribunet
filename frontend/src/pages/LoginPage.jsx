@@ -1,3 +1,21 @@
+/**
+ * @author Roy Meoded
+ * @author Yarin Keshet
+ * @author Tomer Gal
+ *
+ * @date 08-06-2026
+ *
+ * LoginPage.jsx — User Login Page
+ * ================================
+ * Handles email/password authentication via Cognito (AuthContext.login).
+ * Validates inputs client-side before submitting and maps Cognito exception
+ * names to Hebrew error messages:
+ *   UserNotFoundException / NotAuthorizedException → wrong credentials
+ *   UserNotConfirmedException                      → unconfirmed account
+ *
+ * On success redirects to the home page (/). Links to /register and
+ * /forgot-password for account creation and password recovery.
+ */
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -13,6 +31,7 @@ const inputVariants = {
   }),
 }
 
+// Reusable animated input field with optional password show/hide toggle and inline error message.
 function InputField({ id, label, type, value, onChange, icon: Icon, custom, error }) {
   const [showPassword, setShowPassword] = useState(false)
   const isPassword = type === 'password'
@@ -59,6 +78,8 @@ function InputField({ id, label, type, value, onChange, icon: Icon, custom, erro
   )
 }
 
+// Main login page component. Manages email/password state, validation,
+// and Cognito authentication with mapped Hebrew error messages.
 export default function LoginPage() {
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
@@ -69,6 +90,7 @@ export default function LoginPage() {
   const { login }  = useAuth()
   const navigate   = useNavigate()
 
+  // Validates email format and password presence. Returns true if valid.
   function validate() {
     const e = {}
     if (!email.trim())         e.email    = 'נדרשת כתובת אימייל'
@@ -78,6 +100,7 @@ export default function LoginPage() {
     return Object.keys(e).length === 0
   }
 
+  // Handles form submission: validates, calls Cognito login, and redirects to /.
   async function handleSubmit(e) {
     e.preventDefault()
     setApiError('')
@@ -103,7 +126,6 @@ export default function LoginPage() {
 
   return (
     <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit">
-      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -125,26 +147,15 @@ export default function LoginPage() {
           value={password} onChange={(e) => setPassword(e.target.value)}
           icon={Lock} custom={1} error={errors.password}
         />
-
-        {/* Forgot password */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="text-right"
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-right">
           <Link to="/forgot-password" className="text-sm text-pitch-400 hover:text-pitch-300 font-medium transition-colors">
             ?שכחת סיסמה
           </Link>
         </motion.div>
-
-        {/* API error */}
         <AnimatePresence>
           {apiError && (
             <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
+              initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
               className="flex items-center gap-2 bg-red-900/40 border border-red-800 text-red-300 text-sm rounded-lg px-4 py-3"
             >
               <AlertCircle size={15} className="shrink-0" />
@@ -152,36 +163,18 @@ export default function LoginPage() {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Submit */}
         <motion.button
-          type="submit"
-          disabled={loading}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.35 }}
+          type="submit" disabled={loading}
+          whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}
           className="btn-primary w-full flex items-center justify-center gap-2 mt-2"
         >
-          {loading ? (
-            <>
-              <Loader2 size={16} className="animate-spin" />
-              מתחבר...
-            </>
-          ) : (
-            'כניסה'
-          )}
+          {loading ? <><Loader2 size={16} className="animate-spin" /> מתחבר...</> : 'כניסה'}
         </motion.button>
       </form>
 
-      {/* Footer link */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="text-center text-sm text-dark-400 mt-6"
-      >
+      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
+        className="text-center text-sm text-dark-400 mt-6">
         אין לך חשבון?{' '}
         <Link to="/register" className="text-pitch-400 hover:text-pitch-300 font-medium transition-colors">
           הרשם עכשיו

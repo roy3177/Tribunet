@@ -1,9 +1,27 @@
+/**
+ * @author Roy Meoded
+ * @author Yarin Keshet
+ * @author Tomer Gal
+ *
+ * @date 08-06-2026
+ *
+ * MapPage.jsx — Interactive Stadium Map
+ * ======================================
+ * Full-screen interactive map of Israeli football stadiums powered by
+ * MapLibre GL (react-map-gl). Matches and stadiums are fetched via the
+ * useMatches hook and rendered as StadiumMarker components.
+ *
+ * Key features:
+ *   - FilterSidebar for filtering by league, team, city, date, and tickets.
+ *   - Clicking a marker flies the camera to the stadium and opens a MatchPopup.
+ *   - Authenticated users can toggle match favorites inline from the popup.
+ *   - Map style: OpenFreeMap dark (dev) or Amazon Location Service (prod).
+ */
 import { useState, useCallback, useRef } from 'react'
 import Map, { NavigationControl, ScaleControl } from 'react-map-gl/maplibre'
 import { motion, AnimatePresence } from 'framer-motion'
 import { SlidersHorizontal, AlertCircle, Loader2, RefreshCw } from 'lucide-react'
 import 'maplibre-gl/dist/maplibre-gl.css'
-
 import { pageVariants } from '../animations/variants'
 import { useMatches } from '../hooks/useMatches'
 import { useAuth } from '../context/AuthContext'
@@ -12,12 +30,6 @@ import StadiumMarker from '../components/StadiumMarker'
 import MatchPopup from '../components/MatchPopup'
 import { addFavorite, removeFavorite } from '../services/matchService'
 
-// ── Map style ─────────────────────────────────────────────────────────────────
-// Development: free OSM/Maptiler style.
-// Production: replace with Amazon Location Service tile endpoint.
-//
-//   `https://maps.geo.${region}.amazonaws.com/maps/v0/maps/${mapName}/style-descriptor?key=${apiKey}`
-//
 const MAP_STYLE =
   import.meta.env.VITE_LOCATION_MAP_STYLE_URL ??
   'https://tiles.openfreemap.org/styles/dark'
@@ -25,7 +37,7 @@ const MAP_STYLE =
 const ISRAEL_CENTER = { longitude: 34.85, latitude: 31.5 }
 const INITIAL_VIEW  = { ...ISRAEL_CENTER, zoom: 7.2, pitch: 0, bearing: 0 }
 
-// ── Loading overlay ───────────────────────────────────────────────────────────
+// Fullscreen spinner overlay shown while match/stadium data is loading.
 function LoadingOverlay() {
   return (
     <motion.div
@@ -40,7 +52,7 @@ function LoadingOverlay() {
   )
 }
 
-// ── Error banner ──────────────────────────────────────────────────────────────
+// Top-centered error banner with a retry button shown when data fetching fails.
 function ErrorBanner({ message, onRetry }) {
   return (
     <motion.div
@@ -56,13 +68,14 @@ function ErrorBanner({ message, onRetry }) {
   )
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+// Main map page component. Manages sidebar visibility, selected stadium,
+// and the user's favorites set.
 export default function MapPage() {
-  const { user }          = useAuth()
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const { user }                              = useAuth()
+  const [sidebarOpen, setSidebarOpen]         = useState(true)
   const [selectedStadium, setSelectedStadium] = useState(null)
-  const [favorites, setFavorites]     = useState(new Set())
-  const mapRef                        = useRef(null)
+  const [favorites, setFavorites]             = useState(new Set())
+  const mapRef                                = useRef(null)
 
   const {
     matches, stadiums, loading, error,
@@ -70,7 +83,7 @@ export default function MapPage() {
     activeFilterCount, updateFilter, clearFilters, reload,
   } = useMatches()
 
-  // Fly map to selected stadium
+  // Toggles the selected stadium and flies the map camera to its coordinates.
   const handleMarkerClick = useCallback((stadium) => {
     setSelectedStadium((prev) => prev?.stadiumId === stadium.stadiumId ? null : stadium)
     mapRef.current?.flyTo({
@@ -81,10 +94,12 @@ export default function MapPage() {
     })
   }, [])
 
+  // Deselects the currently selected stadium when the map background is clicked.
   const handleMapClick = useCallback(() => {
     setSelectedStadium(null)
   }, [])
 
+  // Adds or removes a match from the user's favorites via POST/DELETE /favorites.
   async function handleToggleFavorite(match) {
     if (!user) return
     const id = match.matchId
@@ -102,44 +117,22 @@ export default function MapPage() {
   }
 
   return (
-    <motion.div
-      variants={pageVariants}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      className="flex h-[calc(100vh-64px)] overflow-hidden"
-    >
-      {/* ── Sidebar ─────────────────────────────────────────────────────────── */}
+    <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit"
+      className="flex h-[calc(100vh-64px)] overflow-hidden">
+
       <FilterSidebar
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        filters={filters}
-        leagues={leagues}
-        teams={teams}
-        cities={cities}
-        activeFilterCount={activeFilterCount}
-        updateFilter={updateFilter}
-        clearFilters={clearFilters}
-        matchCount={matches.length}
+        open={sidebarOpen} onClose={() => setSidebarOpen(false)}
+        filters={filters} leagues={leagues} teams={teams} cities={cities}
+        activeFilterCount={activeFilterCount} updateFilter={updateFilter}
+        clearFilters={clearFilters} matchCount={matches.length}
       />
 
-      {/* ── Map area ────────────────────────────────────────────────────────── */}
       <div className="relative flex-1 overflow-hidden">
-
-        {/* Top bar */}
         <div className="absolute top-4 left-4 z-20 flex items-center gap-2">
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
             onClick={() => setSidebarOpen((v) => !v)}
-            className={`
-              flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium shadow-xl border transition-colors
-              ${sidebarOpen
-                ? 'bg-pitch-700 border-pitch-600 text-white'
-                : 'bg-dark-900/90 border-dark-700 text-dark-300 hover:text-white backdrop-blur-sm'
-              }
-            `}
-          >
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium shadow-xl border transition-colors
+              ${sidebarOpen ? 'bg-pitch-700 border-pitch-600 text-white' : 'bg-dark-900/90 border-dark-700 text-dark-300 hover:text-white backdrop-blur-sm'}`}>
             <SlidersHorizontal size={15} />
             סינון
             {activeFilterCount > 0 && (
@@ -148,82 +141,50 @@ export default function MapPage() {
               </span>
             )}
           </motion.button>
-
-          {/* Active filter chips */}
           <AnimatePresence>
             {filters.league && (
-              <motion.span
-                key="league-chip"
+              <motion.span key="league-chip"
                 initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
-                className="badge-green px-3 py-1.5 text-xs backdrop-blur-sm bg-pitch-900/80"
-              >
+                className="badge-green px-3 py-1.5 text-xs backdrop-blur-sm bg-pitch-900/80">
                 {filters.league}
               </motion.span>
             )}
             {filters.team && (
-              <motion.span
-                key="team-chip"
+              <motion.span key="team-chip"
                 initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}
-                className="badge-green px-3 py-1.5 text-xs backdrop-blur-sm bg-pitch-900/80"
-              >
+                className="badge-green px-3 py-1.5 text-xs backdrop-blur-sm bg-pitch-900/80">
                 {filters.team}
               </motion.span>
             )}
           </AnimatePresence>
         </div>
 
-        {/* Match count pill */}
-        <motion.div
-          key={matches.length}
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="absolute top-4 right-4 z-20 bg-dark-900/90 border border-dark-700 backdrop-blur-sm rounded-xl px-3 py-2 text-xs text-dark-300 shadow-xl"
-        >
+        <motion.div key={matches.length} initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}
+          className="absolute top-4 right-4 z-20 bg-dark-900/90 border border-dark-700 backdrop-blur-sm rounded-xl px-3 py-2 text-xs text-dark-300 shadow-xl">
           {matches.length} משחק{matches.length !== 1 ? 'ים' : ''}
         </motion.div>
 
-        {/* Error */}
         <AnimatePresence>
           {error && <ErrorBanner message={error} onRetry={reload} />}
         </AnimatePresence>
-
-        {/* Loading */}
         <AnimatePresence>
           {loading && <LoadingOverlay />}
         </AnimatePresence>
 
-        {/* Map */}
-        <Map
-          ref={mapRef}
-          initialViewState={INITIAL_VIEW}
-          style={{ width: '100%', height: '100%' }}
-          mapStyle={MAP_STYLE}
-          onClick={handleMapClick}
-          attributionControl={false}
-        >
+        <Map ref={mapRef} initialViewState={INITIAL_VIEW} style={{ width: '100%', height: '100%' }}
+          mapStyle={MAP_STYLE} onClick={handleMapClick} attributionControl={false}>
           <NavigationControl position="bottom-right" showCompass={false} />
           <ScaleControl position="bottom-left" unit="metric" />
-
-          {/* Stadium markers */}
           {stadiums.map((stadium, i) => (
-            <StadiumMarker
-              key={stadium.stadiumId}
-              stadium={stadium}
+            <StadiumMarker key={stadium.stadiumId} stadium={stadium}
               isSelected={selectedStadium?.stadiumId === stadium.stadiumId}
-              onClick={handleMarkerClick}
-              entryIndex={i}
-            />
+              onClick={handleMarkerClick} entryIndex={i} />
           ))}
         </Map>
 
-        {/* Match popup */}
         {selectedStadium && (
-          <MatchPopup
-            stadium={selectedStadium}
-            onClose={() => setSelectedStadium(null)}
-            favorites={favorites}
-            onToggleFavorite={handleToggleFavorite}
-          />
+          <MatchPopup stadium={selectedStadium} onClose={() => setSelectedStadium(null)}
+            favorites={favorites} onToggleFavorite={handleToggleFavorite} />
         )}
       </div>
     </motion.div>

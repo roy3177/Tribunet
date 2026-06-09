@@ -1,3 +1,20 @@
+/**
+ * @author Roy Meoded
+ * @author Yarin Keshet
+ * @author Tomer Gal
+ *
+ * @date 08-06-2026
+ *
+ * AddEditMatchPage.jsx — Add / Edit Match Admin Page
+ * ===================================================
+ * Shared page for creating a new match (POST /matches) and editing an existing
+ * one (PUT /matches/{id}), routed via /admin/matches/new and
+ * /admin/matches/:id/edit respectively.
+ *
+ * Loads stadiums, teams, and leagues from the API (or mock data when
+ * VITE_API_URL is unset) and pre-populates the form when in edit mode.
+ * On save, redirects back to /admin with a toast notification.
+ */
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -27,6 +44,7 @@ const EMPTY_FORM = {
   stadiumId: '', league: '', hasTickets: false, ticketUrl: '',
 }
 
+// Reusable labeled form field wrapper with optional error message below the input.
 function Field({ label, error, children }) {
   return (
     <div>
@@ -37,6 +55,7 @@ function Field({ label, error, children }) {
   )
 }
 
+// Main add/edit match page. Determines mode (add vs edit) from the URL param :id.
 export default function AddEditMatchPage() {
   const { id }   = useParams()
   const navigate = useNavigate()
@@ -51,6 +70,8 @@ export default function AddEditMatchPage() {
   const [saving,   setSaving]   = useState(false)
   const [errors,   setErrors]   = useState({})
 
+  // Loads stadiums, teams, and leagues on mount. In edit mode also fetches the
+  // existing match data and pre-populates the form.
   useEffect(() => {
     async function load() {
       try {
@@ -85,11 +106,13 @@ export default function AddEditMatchPage() {
     load()
   }, [id, isEdit])
 
+  // Updates a single form field and clears its validation error.
   function set(key, value) {
     setForm((prev) => ({ ...prev, [key]: value }))
     setErrors((prev) => ({ ...prev, [key]: '' }))
   }
 
+  // Validates all required fields. Returns an errors object (empty if valid).
   function validate() {
     const errs = {}
     if (!form.homeTeam.trim()) errs.homeTeam  = 'שדה חובה'
@@ -101,6 +124,7 @@ export default function AddEditMatchPage() {
     return errs
   }
 
+  // Submits the form: creates or updates the match and redirects to /admin.
   async function handleSubmit(e) {
     e.preventDefault()
     const errs = validate()
@@ -131,167 +155,81 @@ export default function AddEditMatchPage() {
   }
 
   return (
-    <motion.div
-      variants={pageVariants}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      className="max-w-2xl mx-auto px-4 py-8"
-    >
-      {/* Back */}
-      <motion.button
-        variants={fadeIn}
-        initial="hidden"
-        animate="visible"
+    <motion.div variants={pageVariants} initial="initial" animate="animate" exit="exit" className="max-w-2xl mx-auto px-4 py-8">
+      <motion.button variants={fadeIn} initial="hidden" animate="visible"
         onClick={() => navigate('/admin')}
-        className="flex items-center gap-2 text-dark-400 hover:text-white transition-colors mb-8 text-sm"
-      >
+        className="flex items-center gap-2 text-dark-400 hover:text-white transition-colors mb-8 text-sm">
         <ArrowLeft size={16} /> חזרה לניהול
       </motion.button>
 
-      <motion.div
-        variants={cardVariants}
-        custom={0}
-        initial="hidden"
-        animate="visible"
-        className="card"
-      >
+      <motion.div variants={cardVariants} custom={0} initial="hidden" animate="visible" className="card">
         <h2 className="text-2xl font-bold text-white mb-6">
           {isEdit ? 'עריכת משחק' : 'הוספת משחק חדש'}
         </h2>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-
-          {/* Teams */}
           <div className="grid grid-cols-2 gap-4">
             <Field label="קבוצת בית" error={errors.homeTeam}>
-              <select
-                value={form.homeTeam}
-                onChange={(e) => set('homeTeam', e.target.value)}
-                className="input-field"
-              >
+              <select value={form.homeTeam} onChange={(e) => set('homeTeam', e.target.value)} className="input-field">
                 <option value="">בחר קבוצת בית...</option>
-                {teams.map((t) => (
-                  <option key={t.teamId} value={t.name}>{t.name}</option>
-                ))}
+                {teams.map((t) => <option key={t.teamId} value={t.name}>{t.name}</option>)}
               </select>
             </Field>
             <Field label="קבוצת חוץ" error={errors.awayTeam}>
-              <select
-                value={form.awayTeam}
-                onChange={(e) => set('awayTeam', e.target.value)}
-                className="input-field"
-              >
+              <select value={form.awayTeam} onChange={(e) => set('awayTeam', e.target.value)} className="input-field">
                 <option value="">בחר קבוצת חוץ...</option>
-                {teams.map((t) => (
-                  <option key={t.teamId} value={t.name}>{t.name}</option>
-                ))}
+                {teams.map((t) => <option key={t.teamId} value={t.name}>{t.name}</option>)}
               </select>
             </Field>
           </div>
 
-          {/* Date + Time */}
           <div className="grid grid-cols-2 gap-4">
             <Field label="תאריך" error={errors.date}>
-              <input
-                type="date"
-                value={form.date}
-                onChange={(e) => set('date', e.target.value)}
-                className="input-field"
-              />
+              <input type="date" value={form.date} onChange={(e) => set('date', e.target.value)} className="input-field" />
             </Field>
             <Field label="שעה" error={errors.time}>
-              <input
-                type="time"
-                value={form.time}
-                onChange={(e) => set('time', e.target.value)}
-                className="input-field"
-              />
+              <input type="time" value={form.time} onChange={(e) => set('time', e.target.value)} className="input-field" />
             </Field>
           </div>
 
-          {/* Stadium */}
           <Field label="אצטדיון" error={errors.stadiumId}>
-            <select
-              value={form.stadiumId}
-              onChange={(e) => set('stadiumId', e.target.value)}
-              className="input-field"
-            >
+            <select value={form.stadiumId} onChange={(e) => set('stadiumId', e.target.value)} className="input-field">
               <option value="">בחר אצטדיון...</option>
-              {stadiums.map((s) => (
-                <option key={s.stadiumId} value={s.stadiumId}>{s.name}</option>
-              ))}
+              {stadiums.map((s) => <option key={s.stadiumId} value={s.stadiumId}>{s.name}</option>)}
             </select>
           </Field>
 
-          {/* League */}
           <Field label="ליגה" error={errors.league}>
-            <select
-              value={form.league}
-              onChange={(e) => set('league', e.target.value)}
-              className="input-field"
-            >
+            <select value={form.league} onChange={(e) => set('league', e.target.value)} className="input-field">
               <option value="">בחר ליגה...</option>
-              {leagues.map((l) => (
-                <option key={l.leagueId} value={l.name}>{l.name}</option>
-              ))}
+              {leagues.map((l) => <option key={l.leagueId} value={l.name}>{l.name}</option>)}
             </select>
           </Field>
 
-          {/* Tickets toggle */}
           <Field label="זמינות כרטיסים">
             <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => set('hasTickets', !form.hasTickets)}
-                className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none ${
-                  form.hasTickets ? 'bg-pitch-600' : 'bg-dark-700'
-                }`}
-              >
-                <span
-                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${
-                    form.hasTickets ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
+              <button type="button" onClick={() => set('hasTickets', !form.hasTickets)}
+                className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none ${form.hasTickets ? 'bg-pitch-600' : 'bg-dark-700'}`}>
+                <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${form.hasTickets ? 'translate-x-5' : 'translate-x-0'}`} />
               </button>
-              <span className="text-dark-300 text-sm">
-                {form.hasTickets ? 'יש כרטיסים' : 'אין כרטיסים'}
-              </span>
+              <span className="text-dark-300 text-sm">{form.hasTickets ? 'יש כרטיסים' : 'אין כרטיסים'}</span>
             </div>
           </Field>
 
-          {/* Ticket URL — only when hasTickets */}
           {form.hasTickets && (
             <Field label="לינק לכרטיסים (אופציונלי)">
-              <input
-                type="url"
-                value={form.ticketUrl}
-                onChange={(e) => set('ticketUrl', e.target.value)}
-                placeholder="https://..."
-                className="input-field"
-              />
+              <input type="url" value={form.ticketUrl} onChange={(e) => set('ticketUrl', e.target.value)}
+                placeholder="https://..." className="input-field" />
             </Field>
           )}
 
-          {/* Buttons */}
           <div className="flex gap-3 pt-2">
-            <motion.button
-              type="submit"
-              disabled={saving}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="btn-primary flex items-center gap-2 flex-1 justify-center"
-            >
+            <motion.button type="submit" disabled={saving} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+              className="btn-primary flex items-center gap-2 flex-1 justify-center">
               {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
               {isEdit ? 'שמור שינויים' : 'צור משחק'}
             </motion.button>
-            <button
-              type="button"
-              onClick={() => navigate('/admin')}
-              className="btn-secondary px-6"
-            >
-              ביטול
-            </button>
+            <button type="button" onClick={() => navigate('/admin')} className="btn-secondary px-6">ביטול</button>
           </div>
         </form>
       </motion.div>
