@@ -1,3 +1,24 @@
+/**
+ * @author Roy Meoded
+ * @author Yarin Keshet
+ * @author Tomer Gal
+ *
+ * @date 08-06-2026
+ *
+ * HomePage.jsx — Landing Page
+ * ============================
+ * The main entry point of the Tribunet app. Composed of four sections:
+ *
+ *   Hero            — Full-screen background image with the Tribunet logo,
+ *                     tagline, and CTA buttons to /map and /register.
+ *   Featured Matches — Fetches upcoming matches from GET /matches, filters
+ *                     to Israeli leagues only, sorts by date/time, and
+ *                     displays the next 3 as MatchCard components.
+ *                     Reveals a background image on scroll via whileInView.
+ *   Features        — Four FeatureCard components (map, tickets, favorites,
+ *                     smart filter) that animate in when scrolled into view.
+ *   Admin CTA       — Visible only to admin users; links to /admin dashboard.
+ */
 import { useRef, useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useInView } from 'framer-motion'
@@ -44,6 +65,9 @@ const FEATURES = [
 ]
 
 // ─── Match Card ───────────────────────────────────────────────────────────────
+
+// Renders a single upcoming match card with league badge, ticket status,
+// teams, date/time/stadium, and a hover overlay linking to the match detail page.
 function MatchCard({ match, index }) {
   const dateStr = new Date(match.date).toLocaleDateString('he-IL', {
     weekday: 'short', day: 'numeric', month: 'long',
@@ -101,6 +125,9 @@ function MatchCard({ match, index }) {
 }
 
 // ─── Feature Card ─────────────────────────────────────────────────────────────
+
+// Renders a single platform feature card with icon, title, and description.
+// Animates in when scrolled into view using useInView.
 function FeatureCard({ feature, index }) {
   const ref    = useRef(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
@@ -127,6 +154,10 @@ function FeatureCard({ feature, index }) {
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
+
+// Main landing page component. Fetches upcoming matches on mount, filters
+// to Israeli leagues only, and renders Hero, Featured Matches, Features,
+// and Admin CTA sections.
 export default function HomePage() {
   const { user, isAdmin } = useAuth()
   const matchesRef = useRef(null)
@@ -135,6 +166,7 @@ export default function HomePage() {
   const [featuredMatches, setFeaturedMatches] = useState([])
   const [matchesLoading, setMatchesLoading]   = useState(true)
 
+  // Fetch all matches, filter to upcoming Israeli league games, and take the next 3.
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0]
     getMatches()

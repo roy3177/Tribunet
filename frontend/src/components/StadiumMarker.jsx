@@ -1,11 +1,37 @@
+/**
+ * @author Roy Meoded
+ * @author Yarin Keshet
+ * @author Tomer Gal
+ *
+ * @date 08-06-2026
+ *
+ * StadiumMarker.jsx — MapLibre Stadium Pin
+ * ==========================================
+ * Animated map marker rendered inside the MapLibre GL map for each stadium.
+ * Staggered entry animation based on entryIndex for a cascade effect on load.
+ *
+ * Visual states:
+ *   Default  — dark pin with MapPin icon (no upcoming matches with tickets).
+ *   Tickets  — green-bordered pin with Ticket icon (at least one match has tickets).
+ *   Selected — pitch-colored pin with a looping pulse ring.
+ *   Hovered  — pin scales up and a tooltip shows stadium name, city, and match count.
+ *
+ * A match count badge is shown in the top-right corner of the pin.
+ */
 import { useState } from 'react'
 import { Marker } from 'react-map-gl/maplibre'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MapPin, Ticket } from 'lucide-react'
 
+// Renders a single animated stadium pin on the MapLibre map.
+// Handles hover state locally; selected state and click are controlled by the parent.
 export default function StadiumMarker({ stadium, isSelected, onClick, entryIndex = 0 }) {
   const [hovered, setHovered] = useState(false)
+
+  // True if any of the stadium's matches still have tickets available.
   const hasTickets = stadium.matches.some((m) => m.hasTickets)
+
+  // Total number of matches scheduled at this stadium.
   const matchCount = stadium.matches.length
 
   return (
@@ -23,7 +49,7 @@ export default function StadiumMarker({ stadium, isSelected, onClick, entryIndex
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
       >
-        {/* Pulse ring when selected */}
+        {/* Looping pulse ring — only visible when the marker is selected */}
         <AnimatePresence>
           {isSelected && (
             <motion.div
@@ -36,18 +62,16 @@ export default function StadiumMarker({ stadium, isSelected, onClick, entryIndex
           )}
         </AnimatePresence>
 
-        {/* Pin body */}
+        {/* Pin body: scales up on hover or selection */}
         <motion.div
           animate={{
             scale: hovered || isSelected ? 1.18 : 1,
             y: hovered || isSelected ? -3 : 0,
           }}
           transition={{ type: 'spring', stiffness: 400, damping: 22 }}
-          className={`
-            relative flex flex-col items-center
-          `}
+          className="relative flex flex-col items-center"
         >
-          {/* Match count badge */}
+          {/* Match count badge — top-right corner of the pin icon */}
           {matchCount > 0 && (
             <motion.div
               initial={{ scale: 0 }}
@@ -65,7 +89,7 @@ export default function StadiumMarker({ stadium, isSelected, onClick, entryIndex
             </motion.div>
           )}
 
-          {/* Icon container */}
+          {/* Circular icon container: color changes based on selected/ticket state */}
           <div
             className={`
               w-10 h-10 rounded-full flex items-center justify-center shadow-xl
@@ -81,16 +105,16 @@ export default function StadiumMarker({ stadium, isSelected, onClick, entryIndex
             {hasTickets ? <Ticket size={17} /> : <MapPin size={17} />}
           </div>
 
-          {/* Pointer tip */}
+          {/* Small rotated square forming the pin's bottom pointer tip */}
           <div
             className={`
               w-2 h-2 rotate-45 -mt-1 shadow-md
-              ${isSelected ? 'bg-pitch-600' : hasTickets ? 'bg-dark-800' : 'bg-dark-800'}
+              ${isSelected ? 'bg-pitch-600' : 'bg-dark-800'}
             `}
           />
         </motion.div>
 
-        {/* Hover tooltip */}
+        {/* Hover tooltip — shown only when hovered and not selected */}
         <AnimatePresence>
           {hovered && !isSelected && (
             <motion.div
@@ -104,7 +128,7 @@ export default function StadiumMarker({ stadium, isSelected, onClick, entryIndex
                 <p className="text-white text-xs font-semibold">{stadium.name}</p>
                 <p className="text-dark-400 text-[10px]">{stadium.city} · {matchCount} משחק{matchCount !== 1 ? 'ים' : ''}</p>
               </div>
-              {/* Arrow */}
+              {/* Tooltip arrow */}
               <div className="w-2 h-2 bg-dark-800 border-r border-b border-dark-700 rotate-45 mx-auto -mt-1" />
             </motion.div>
           )}

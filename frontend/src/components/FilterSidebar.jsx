@@ -1,7 +1,26 @@
+/**
+ * @author Roy Meoded
+ * @author Yarin Keshet
+ * @author Tomer Gal
+ *
+ * @date 08-06-2026
+ *
+ * FilterSidebar.jsx — Map Filter Sidebar
+ * ========================================
+ * Slide-in sidebar panel used on the MapPage to filter matches by
+ * search text, league, team, city, and ticket availability.
+ *
+ * On mobile it renders as a fixed overlay panel with a backdrop.
+ * On desktop (lg+) it sits inline as a relative sidebar.
+ * The footer displays the current filtered match count.
+ * Active filter count is shown as a badge on the header.
+ */
 import { motion, AnimatePresence } from 'framer-motion'
 import { SlidersHorizontal, X, ChevronDown, Search } from 'lucide-react'
 import { slideInLeft } from '../animations/variants'
 
+// Reusable styled select dropdown with a label and chevron icon.
+// Calls onChange with the selected value string.
 function FilterSelect({ label, value, onChange, options, placeholder }) {
   return (
     <div className="space-y-1.5">
@@ -28,10 +47,12 @@ function FilterSelect({ label, value, onChange, options, placeholder }) {
   )
 }
 
+// Main sidebar component. Animates in/out via AnimatePresence.
+// Renders a mobile backdrop overlay and the filter panel with all filter controls.
 export default function FilterSidebar({ open, onClose, filters, leagues, teams, cities, activeFilterCount, updateFilter, clearFilters, matchCount }) {
   return (
     <>
-      {/* Mobile overlay */}
+      {/* Mobile backdrop overlay — clicking it closes the sidebar */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -59,7 +80,7 @@ export default function FilterSidebar({ open, onClose, filters, leagues, teams, 
               lg:relative lg:top-auto lg:z-auto lg:h-full
             "
           >
-            {/* Header */}
+            {/* Header: title, active filter badge, clear-all button, close button */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-dark-800 shrink-0">
               <div className="flex items-center gap-2">
                 <SlidersHorizontal size={16} className="text-pitch-400" />
@@ -91,9 +112,9 @@ export default function FilterSidebar({ open, onClose, filters, leagues, teams, 
               </div>
             </div>
 
-            {/* Filters */}
+            {/* Scrollable filter controls */}
             <div className="flex-1 overflow-y-auto px-5 py-5 space-y-5">
-              {/* Free-text search */}
+              {/* Free-text search by team or stadium name */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-medium text-dark-400 uppercase tracking-wide">
                   חיפוש
@@ -134,16 +155,16 @@ export default function FilterSidebar({ open, onClose, filters, leagues, teams, 
                 placeholder="כל הערים"
               />
 
-              {/* Tickets toggle */}
+              {/* Ticket availability toggle: All / Has tickets / Sold out */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-medium text-dark-400 uppercase tracking-wide">
                   כרטיסים
                 </label>
                 <div className="flex gap-2">
                   {[
-                    { label: 'הכל',      value: '' },
-                    { label: 'יש כרטיסים', value: 'true' },
-                    { label: 'אזל',      value: 'false' },
+                    { label: 'הכל',        value: ''      },
+                    { label: 'יש כרטיסים', value: 'true'  },
+                    { label: 'אזל',        value: 'false' },
                   ].map((opt) => (
                     <button
                       key={opt.value}
@@ -161,7 +182,7 @@ export default function FilterSidebar({ open, onClose, filters, leagues, teams, 
               </div>
             </div>
 
-            {/* Footer — match count */}
+            {/* Footer: animated match count reflecting current filters */}
             <div className="px-5 py-4 border-t border-dark-800 shrink-0">
               <motion.p
                 key={matchCount}

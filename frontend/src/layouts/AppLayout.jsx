@@ -1,9 +1,31 @@
+/**
+ * @author Roy Meoded
+ * @author Yarin Keshet
+ * @author Tomer Gal
+ *
+ * @date 08-06-2026
+ *
+ * AppLayout.jsx — Main Application Layout
+ * =========================================
+ * Wraps all standard (non-auth) pages with a sticky navbar, main content
+ * area via <Outlet />, and a footer.
+ *
+ * Navbar links:
+ *   /map       — always visible.
+ *   /favorites — authenticated users only.
+ *   /admin     — admin users only.
+ *   /profile   — authenticated users only (auth section).
+ *   Login CTA  — guest users only.
+ *
+ * The active NavLink is highlighted with a pitch-colored background.
+ */
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Map, Heart, User, Shield, LogOut, LogIn } from 'lucide-react'
 import stadiumIcon from '../assets/stadium-icon.svg'
 import { useAuth } from '../context/AuthContext'
 
+// Reusable navbar link with active-state styling via NavLink's isActive callback.
 function NavItem({ to, icon: Icon, label }) {
   return (
     <NavLink
@@ -22,10 +44,12 @@ function NavItem({ to, icon: Icon, label }) {
   )
 }
 
+// Main layout component. Renders the sticky navbar, page outlet, and footer.
 export default function AppLayout() {
   const { user, isAdmin, logout } = useAuth()
   const navigate = useNavigate()
 
+  // Logs the user out and redirects to the home page.
   async function handleLogout() {
     await logout()
     navigate('/')
@@ -33,7 +57,7 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen flex flex-col bg-dark-950">
-      {/* Navbar */}
+      {/* Sticky navbar with blur backdrop */}
       <motion.nav
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -49,14 +73,14 @@ export default function AppLayout() {
             </span>
           </NavLink>
 
-          {/* Nav links */}
+          {/* Navigation links */}
           <div className="flex items-center gap-1">
             <NavItem to="/map" icon={Map} label="מפה" />
             {user && <NavItem to="/favorites" icon={Heart} label="מועדפים" />}
             {isAdmin && <NavItem to="/admin" icon={Shield} label="ניהול" />}
           </div>
 
-          {/* Auth */}
+          {/* Auth section: profile + logout for users, login button for guests */}
           <div className="flex items-center gap-2 shrink-0">
             {user ? (
               <>
@@ -82,7 +106,7 @@ export default function AppLayout() {
         </div>
       </motion.nav>
 
-      {/* Page content */}
+      {/* Page content rendered by the matched child route */}
       <main className="flex-1">
         <Outlet />
       </main>

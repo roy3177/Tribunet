@@ -1,8 +1,28 @@
+/**
+ * @author Roy Meoded
+ * @author Yarin Keshet
+ * @author Tomer Gal
+ *
+ * @date 08-06-2026
+ *
+ * Toast.jsx — Global Toast Notification
+ * =======================================
+ * Animated toast notification rendered in the top-right corner of the screen.
+ * Reads the current toast state from ToastContext and displays it with a
+ * success (green) or error (red) style.
+ *
+ * The toast auto-dismisses via ToastContext's internal timer, or can be
+ * manually dismissed by clicking the X button which calls clear().
+ * Uses AnimatePresence so the toast animates out smoothly when removed.
+ */
 import { AnimatePresence, motion } from 'framer-motion'
 import { CheckCircle, XCircle, X } from 'lucide-react'
 import { useToast } from '../context/ToastContext'
 import { modalVariants } from '../animations/variants'
 
+// Renders the active toast notification from ToastContext.
+// Shows a check icon for success toasts and an X icon for error toasts.
+// Clicking the X button manually clears the toast via ToastContext.clear().
 export default function Toast() {
   const { toast, clear } = useToast()
 

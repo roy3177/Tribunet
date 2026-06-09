@@ -1,7 +1,30 @@
+/**
+ * @author Roy Meoded
+ * @author Yarin Keshet
+ * @author Tomer Gal
+ *
+ * @date 08-06-2026
+ *
+ * ConfirmDialog.jsx — Reusable Confirmation Modal
+ * =================================================
+ * Animated modal dialog used to confirm destructive actions (e.g. delete).
+ * Renders a backdrop overlay and a card with a warning icon, title, message,
+ * and two buttons: a confirm action (red) and a cancel action.
+ *
+ * Props:
+ *   open         — controls visibility via AnimatePresence.
+ *   title        — bold heading inside the dialog.
+ *   message      — descriptive text explaining the action.
+ *   confirmLabel — label for the confirm button (default: 'מחק').
+ *   onConfirm    — callback fired when the confirm button is clicked.
+ *   onCancel     — callback fired when the cancel button or backdrop is clicked.
+ */
 import { AnimatePresence, motion } from 'framer-motion'
 import { AlertTriangle } from 'lucide-react'
 import { modalVariants } from '../animations/variants'
 
+// Renders a full-screen backdrop with a centered confirmation card.
+// Clicking the backdrop triggers onCancel.
 export default function ConfirmDialog({ open, title, message, confirmLabel = 'מחק', onConfirm, onCancel }) {
   return (
     <AnimatePresence>
@@ -16,7 +39,7 @@ export default function ConfirmDialog({ open, title, message, confirmLabel = 'מ
             onClick={onCancel}
           />
 
-          {/* Dialog */}
+          {/* Dialog card */}
           <motion.div
             variants={modalVariants}
             initial="hidden"

@@ -1,17 +1,35 @@
+/**
+ * @author Roy Meoded
+ * @author Yarin Keshet
+ * @author Tomer Gal
+ *
+ * @date 08-06-2026
+ *
+ * AuthLayout.jsx — Authentication Pages Layout
+ * =============================================
+ * Wraps all guest-only auth pages (Login, Register, ForgotPassword) with
+ * a centered card layout over a full-screen background image.
+ *
+ * Renders the Tribunet logo above the card and uses <Outlet /> to inject
+ * the matched auth page into the card body.
+ * The background image is darkened with a near-opaque overlay for readability.
+ */
 import { Outlet, NavLink } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import loginBg from '../assets/images/login_image.jpg'
 import stadiumIcon from '../assets/stadium-icon.svg'
 
+// Auth layout component. Centers the logo and the auth card over a background image.
 export default function AuthLayout() {
   return (
     <div className="min-h-screen relative flex flex-col items-center justify-center px-4 py-12">
-      {/* Background image */}
+      {/* Full-screen background image with dark overlay */}
       <div className="absolute inset-0 pointer-events-none">
         <img src={loginBg} alt="" className="w-full h-full object-cover object-center" />
         <div className="absolute inset-0 bg-dark-950/90" />
       </div>
-      {/* Logo */}
+
+      {/* Animated Tribunet logo linking back to the home page */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -26,7 +44,7 @@ export default function AuthLayout() {
         </NavLink>
       </motion.div>
 
-      {/* Auth card */}
+      {/* Animated auth card containing the matched child route via Outlet */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}

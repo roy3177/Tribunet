@@ -1,11 +1,31 @@
+/**
+ * @author Roy Meoded
+ * @author Yarin Keshet
+ * @author Tomer Gal
+ *
+ * @date 08-06-2026
+ *
+ * MatchPopup.jsx — Stadium Match Popup Panel
+ * ============================================
+ * Floating panel rendered over the MapPage when a stadium marker is selected.
+ * Lists all matches for the selected stadium as MatchRow cards.
+ *
+ * Each MatchRow displays: home vs. away teams, date, time, ticket status,
+ * a details link to /matches/:id, an optional ticket purchase link,
+ * and a favorite toggle button for authenticated users.
+ *
+ * The popup is dismissed via the X button or by clicking the map background.
+ * Returns null when no stadium is selected.
+ */
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { X, Calendar, Clock, MapPin, Ticket, ExternalLink, Heart } from 'lucide-react'
 import { modalVariants } from '../animations/variants'
 import { useAuth } from '../context/AuthContext'
-import { addFavorite, removeFavorite } from '../services/matchService'
 import { useState } from 'react'
 
+// Renders a single match card with team names, date/time, ticket status,
+// and action buttons (details, buy ticket, favorite toggle).
 function MatchRow({ match, isFavorite, onToggleFavorite }) {
   const dateStr = new Date(match.date).toLocaleDateString('he-IL', {
     weekday: 'short', day: 'numeric', month: 'short',
@@ -24,7 +44,7 @@ function MatchRow({ match, isFavorite, onToggleFavorite }) {
         <span className="text-white font-bold text-sm text-left flex-1">{match.awayTeam}</span>
       </div>
 
-      {/* Meta */}
+      {/* Date, time, and ticket availability */}
       <div className="flex flex-wrap gap-3 text-xs text-dark-400 mb-3">
         <span className="flex items-center gap-1"><Calendar size={11} />{dateStr}</span>
         <span className="flex items-center gap-1"><Clock size={11} />{match.time}</span>
@@ -34,7 +54,7 @@ function MatchRow({ match, isFavorite, onToggleFavorite }) {
         </span>
       </div>
 
-      {/* Actions */}
+      {/* Action buttons: details link, optional ticket link, favorite toggle */}
       <div className="flex items-center gap-2">
         <Link
           to={`/matches/${match.matchId}`}
@@ -73,6 +93,9 @@ function MatchRow({ match, isFavorite, onToggleFavorite }) {
   )
 }
 
+// Main popup component. Renders a scrollable panel of MatchRow cards for the
+// selected stadium. Returns null if no stadium is provided.
+// The favorite toggle is only shown to authenticated users.
 export default function MatchPopup({ stadium, onClose, favorites, onToggleFavorite }) {
   const { user } = useAuth()
 
@@ -100,7 +123,7 @@ export default function MatchPopup({ stadium, onClose, favorites, onToggleFavori
             flex flex-col overflow-hidden
           "
         >
-          {/* Header */}
+          {/* Header: stadium name, city, and close button */}
           <div className="flex items-start justify-between p-5 border-b border-dark-800 shrink-0">
             <div>
               <h3 className="text-white font-bold text-base">{stadium.name}</h3>
@@ -116,7 +139,7 @@ export default function MatchPopup({ stadium, onClose, favorites, onToggleFavori
             </button>
           </div>
 
-          {/* Match list */}
+          {/* Scrollable match list */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {stadium.matches.length === 0 ? (
               <p className="text-dark-500 text-sm text-center py-8">אין משחקים לאצטדיון זה</p>
