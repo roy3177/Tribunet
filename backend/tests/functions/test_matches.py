@@ -1,3 +1,16 @@
+"""
+@ author: Roy Meoded
+@ author: Yarin Keshet
+@ author: Tomer Gal
+
+@ date: 08-06-2026
+
+tests/functions/test_matches.py — Unit Tests for matches/handler.py
+=====================================================================
+Tests match validation, TTL computation, and all HTTP endpoints.
+DynamoDB and admin auth are mocked via monkeypatch — no real AWS calls.
+"""
+
 import json
 import base64
 import pytest
@@ -6,6 +19,7 @@ from functions.matches.handler import _validate_match, _compute_ttl, main
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+# A complete valid match body used as a base for most tests:
 VALID_BODY = {
     'homeTeam':  'מכבי תל אביב',
     'awayTeam':  'הפועל באר שבע',
@@ -16,6 +30,7 @@ VALID_BODY = {
 }
 
 
+# Builds a minimal API Gateway event without JWT (public routes don't need auth):
 def _ev(method, route_key, body=None, path=None, qs=None):
     return {
         'requestContext': {'http': {'method': method}},
@@ -32,6 +47,7 @@ def test_validate_match_valid():
     assert _validate_match(VALID_BODY) is None
 
 
+# Each required field must be present and non-empty:
 @pytest.mark.parametrize('field', ['homeTeam', 'awayTeam', 'date', 'time', 'stadiumId', 'league'])
 def test_validate_match_missing_required_field(field):
     body = {**VALID_BODY, field: ''}
@@ -58,11 +74,13 @@ def test_validate_match_away_team_too_long():
     assert _validate_match(body) is not None
 
 
+# ticketUrl must start with 'http' — ftp:// is not accepted:
 def test_validate_match_bad_ticket_url():
     body = {**VALID_BODY, 'ticketUrl': 'ftp://not-http.com'}
     assert _validate_match(body) is not None
 
 
+# Empty ticketUrl is allowed — ticket link is optional:
 def test_validate_match_empty_ticket_url_ok():
     body = {**VALID_BODY, 'ticketUrl': ''}
     assert _validate_match(body) is None
@@ -75,6 +93,7 @@ def test_validate_match_valid_https_url():
 
 # ── _compute_ttl (pure) ───────────────────────────────────────────────────────
 
+# TTL should be the Unix timestamp of midnight at the start of the day AFTER the match:
 def test_compute_ttl_is_start_of_next_day():
     ttl = _compute_ttl('2026-06-01')
     expected = int(datetime(2026, 6, 2, tzinfo=timezone.utc).timestamp())
@@ -99,6 +118,7 @@ def test_get_matches_returns_200_with_list(monkeypatch):
     assert data['count'] == 1
 
 
+# nextKey should be None when there are no more pages:
 def test_get_matches_next_key_none_when_last_page(monkeypatch):
     monkeypatch.setattr(
         'functions.matches.handler.scan_page',
@@ -108,15 +128,12 @@ def test_get_matches_next_key_none_when_last_page(monkeypatch):
     assert json.loads(r['body'])['data']['nextKey'] is None
 
 
+# A malformed base64 cursor that decodes to non-JSON should return 400:
 def test_get_matches_bad_cursor_returns_400(monkeypatch):
     monkeypatch.setattr(
         'functions.matches.handler.scan_page',
         lambda *a, **kw: {'items': [], 'lastKey': None},
     )
-    bad_cursor = base64.b64encode(b'not-valid-json!!!').decode()
-    r = main(_ev('GET', 'GET /matches', qs={'lastKey': bad_cursor}), None)
-    # Decoded value is not valid JSON → bad_request
-    # Use a cursor that decodes to non-JSON
     r2 = main(_ev('GET', 'GET /matches', qs={'lastKey': 'AAAA'}), None)
     assert r2['statusCode'] == 400
 
@@ -143,6 +160,7 @@ def test_create_match_success(monkeypatch):
     monkeypatch.setattr('functions.matches.handler.require_admin', lambda e: None)
     monkeypatch.setattr(
         'functions.matches.handler.get_item',
+        # Returns stadium item when looking up STADIUMS_TABLE, None otherwise:
         lambda table, key: {'stadiumId': 'stadium-1', 'name': 'בלומפילד'} if 'STADIUM' in table else None,
     )
     monkeypatch.setattr('functions.matches.handler.put_item', lambda *a, **kw: None)
@@ -167,6 +185,7 @@ def test_create_match_stadium_not_found_returns_400(monkeypatch):
     assert 'Stadium' in json.loads(r['body'])['error']
 
 
+# Non-admin user should get 403:
 def test_create_match_admin_required(monkeypatch):
     monkeypatch.setattr(
         'functions.matches.handler.require_admin',
@@ -195,6 +214,7 @@ def test_delete_match_not_found(monkeypatch):
 
 # ── OPTIONS preflight ─────────────────────────────────────────────────────────
 
+# Browser sends OPTIONS before cross-origin requests — must return 200:
 def test_options_returns_200():
     r = main(_ev('OPTIONS', ''), None)
     assert r['statusCode'] == 200

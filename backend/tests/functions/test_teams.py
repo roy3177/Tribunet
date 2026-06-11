@@ -1,8 +1,22 @@
+"""
+@ author: Roy Meoded
+@ author: Yarin Keshet
+@ author: Tomer Gal
+
+@ date: 08-06-2026
+
+tests/functions/test_teams.py — Unit Tests for teams/handler.py
+================================================================
+Tests team listing (alphabetical sort), CRUD endpoints, and that
+teamId is never overwritten on update. Mocked via monkeypatch.
+"""
+
 import json
 import pytest
 from functions.teams.handler import main
 
 
+# Builds a minimal API Gateway event:
 def _ev(method, route_key, body=None, path=None):
     return {
         'requestContext': {'http': {'method': method}},
@@ -15,6 +29,7 @@ def _ev(method, route_key, body=None, path=None):
 
 # ── GET /teams ────────────────────────────────────────────────────────────────
 
+# Teams must be returned sorted alphabetically by name:
 def test_get_teams_sorted_by_name_ascending(monkeypatch):
     items = [
         {'teamId': '1', 'name': 'מכבי חיפה'},
@@ -54,6 +69,7 @@ def test_get_team_not_found(monkeypatch):
 
 # ── POST /teams ───────────────────────────────────────────────────────────────
 
+# When no fields are provided, all string fields should default to '':
 def test_create_team_with_defaults(monkeypatch):
     monkeypatch.setattr('functions.teams.handler.require_admin', lambda e: None)
     stored = {}
@@ -77,6 +93,7 @@ def test_create_team_with_data(monkeypatch):
 
 # ── PUT /teams/{id} ───────────────────────────────────────────────────────────
 
+# teamId must never change after creation — the path param always wins:
 def test_update_team_preserves_team_id(monkeypatch):
     existing = {'teamId': 'tm1', 'name': 'Old Name', 'league': '', 'city': ''}
     monkeypatch.setattr('functions.teams.handler.require_admin', lambda e: None)

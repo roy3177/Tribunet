@@ -1,8 +1,22 @@
+"""
+@ author: Roy Meoded
+@ author: Yarin Keshet
+@ author: Tomer Gal
+
+@ date: 08-06-2026
+
+tests/test_response.py — Unit Tests for shared/response.py
+============================================================
+Tests all HTTP response helpers: status codes, CORS headers,
+and Decimal serialization (DynamoDB returns Decimal types for numbers).
+"""
+
 import json
 from decimal import Decimal
 from shared import response
 
 
+# Helper: parse the response body JSON into a dict:
 def _body(r):
     return json.loads(r['body'])
 
@@ -83,6 +97,7 @@ def test_options_preflight():
 
 # ── CORS headers ──────────────────────────────────────────────────────────────
 
+# Every response must include CORS headers so the browser allows the request:
 def test_cors_header_present_on_ok():
     r = response.ok()
     assert 'Access-Control-Allow-Origin' in r['headers']
@@ -93,6 +108,7 @@ def test_cors_methods_header_present():
     assert 'Access-Control-Allow-Methods' in r['headers']
 
 
+# CORS headers must be included on error responses too — browser checks them:
 def test_cors_header_present_on_error():
     r = response.bad_request()
     assert 'Access-Control-Allow-Origin' in r['headers']
@@ -100,6 +116,7 @@ def test_cors_header_present_on_error():
 
 # ── Decimal encoding ──────────────────────────────────────────────────────────
 
+# DynamoDB stores numbers as Decimal — verify they serialize correctly to JSON:
 def test_decimal_whole_number_encodes_as_int():
     r = response.ok({'val': Decimal('5')})
     assert _body(r)['data']['val'] == 5

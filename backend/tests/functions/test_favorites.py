@@ -1,9 +1,23 @@
+"""
+@ author: Roy Meoded
+@ author: Yarin Keshet
+@ author: Tomer Gal
+
+@ date: 08-06-2026
+
+tests/functions/test_favorites.py — Unit Tests for favorites/handler.py
+=========================================================================
+Tests GET (with match enrichment), POST (add favorite), and DELETE (remove favorite).
+DynamoDB is mocked at the resource level since favorites uses get_dynamodb() directly.
+"""
+
 import json
 import pytest
 from unittest.mock import MagicMock
 from functions.favorites.handler import main
 
 
+# Builds a minimal API Gateway event with Cognito JWT claims:
 def _ev(method, route_key, path=None, sub='user-123'):
     return {
         'requestContext': {
@@ -17,8 +31,8 @@ def _ev(method, route_key, path=None, sub='user-123'):
     }
 
 
+# Helper: patches get_dynamodb() to return a mock table with the given query items:
 def _mock_dynamo(monkeypatch, query_items=None):
-    """Patch get_dynamodb() in the favorites handler."""
     mock_table = MagicMock()
     mock_table.query.return_value = {'Items': query_items or []}
     mock_resource = MagicMock()
@@ -36,6 +50,7 @@ def test_get_favorites_empty(monkeypatch):
     assert json.loads(r['body'])['data'] == []
 
 
+# Each favorited matchId should be enriched with full match data from Matches table:
 def test_get_favorites_enriches_with_match_data(monkeypatch):
     _mock_dynamo(monkeypatch, query_items=[
         {'userId': 'user-123', 'matchId': 'match-1'},
@@ -55,6 +70,7 @@ def test_get_favorites_enriches_with_match_data(monkeypatch):
     assert len(data) == 2
 
 
+# Deleted matches (TTL-expired) should be silently skipped — not cause an error:
 def test_get_favorites_skips_deleted_matches(monkeypatch):
     _mock_dynamo(monkeypatch, query_items=[
         {'userId': 'user-123', 'matchId': 'match-1'},
@@ -84,6 +100,7 @@ def test_add_favorite_match_exists(monkeypatch):
     assert data['userId'] == 'user-123'
 
 
+# Cannot favorite a match that doesn't exist:
 def test_add_favorite_match_not_found(monkeypatch):
     _mock_dynamo(monkeypatch)
     monkeypatch.setattr('functions.favorites.handler.get_item', lambda *a, **kw: None)
@@ -91,6 +108,7 @@ def test_add_favorite_match_not_found(monkeypatch):
     assert r['statusCode'] == 404
 
 
+# Whitespace-only match ID should be rejected:
 def test_add_favorite_missing_match_id(monkeypatch):
     _mock_dynamo(monkeypatch)
     r = main(_ev('POST', 'POST /favorites/{id}', path={'id': '   '}), None)
@@ -108,6 +126,7 @@ def test_remove_favorite_success(monkeypatch):
     assert r['statusCode'] == 204
 
 
+# Trying to remove a favorite that doesn't exist should return 404:
 def test_remove_favorite_not_found(monkeypatch):
     _mock_dynamo(monkeypatch)
     monkeypatch.setattr('functions.favorites.handler.get_item', lambda *a, **kw: None)

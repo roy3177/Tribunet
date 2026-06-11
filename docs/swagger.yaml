@@ -1,3 +1,28 @@
+# ============================================================
+# @ author: Roy Meoded
+# @ author: Yarin Keshet
+# @ author: Tomer Gal
+#
+# @ date: 08-06-2026
+#
+# docs/swagger.yaml — OpenAPI 3.0 API Specification
+# ===================================================
+# This file defines the complete REST API contract for Tribunet.
+# It is used to:
+#   1. Generate interactive API documentation (Swagger UI / Redoc)
+#   2. Serve as the agreement between Frontend and Backend teams
+#   3. Validate request/response shapes during development
+#
+# To view this file visually, paste it into: https://editor.swagger.io
+# Or run: npx @redocly/cli preview-docs docs/swagger.yaml
+#
+# Structure:
+#   - info/servers    → API metadata and base URL
+#   - components      → Reusable schemas, responses, and security schemes
+#   - paths           → All 18 API endpoints grouped by resource
+#   - tags            → Logical groupings shown in Swagger UI
+# ============================================================
+
 openapi: 3.0.3
 info:
   title: Tribunet API
@@ -30,6 +55,8 @@ servers:
         enum: [prod, dev]
 
 # ── Security Scheme ────────────────────────────────────────────────────────────
+# All components defined here are reusable — referenced elsewhere with $ref.
+# This avoids repeating the same schema in every endpoint definition.
 components:
   securitySchemes:
     CognitoAuth:
@@ -86,6 +113,8 @@ components:
           example: "2025-08-01T12:00:00Z"
         ttl:
           type: integer
+          # Unix epoch seconds — DynamoDB's TTL feature uses this to auto-expire old matches.
+          # Set to midnight of the day after the match date.
           description: Unix timestamp — DynamoDB auto-deletes the item after match day
           example: 1757952000
 
@@ -246,6 +275,7 @@ components:
       properties:
         userId:
           type: string
+          # 'sub' is Cognito's internal UUID for the user — used as DynamoDB partition key.
           description: Cognito sub (UUID)
           example: "sub-uuid-from-cognito"
         email:
@@ -360,6 +390,8 @@ paths:
             default: 20
         - name: lastKey
           in: query
+          # DynamoDB pagination: pass the `nextKey` from the previous response to get the next page.
+          # null nextKey in the response means you've reached the last page.
           description: Base64-encoded pagination cursor returned as `nextKey` from the previous page
           schema:
             type: string
@@ -727,6 +759,8 @@ paths:
   /users/me:
     get:
       summary: Get own profile
+      # Auto-creates the DynamoDB record if the Cognito trigger failed at signup.
+      # This is the safety-net for first-time logins with no DB record.
       description: Returns the DynamoDB user record for the currently authenticated user. Creates the record on first call if it does not exist yet.
       operationId: getMe
       tags: [Users]

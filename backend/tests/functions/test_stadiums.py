@@ -1,8 +1,22 @@
+"""
+@ author: Roy Meoded
+@ author: Yarin Keshet
+@ author: Tomer Gal
+
+@ date: 08-06-2026
+
+tests/functions/test_stadiums.py — Unit Tests for stadiums/handler.py
+=======================================================================
+Tests stadium validation (including geographic coordinate bounds)
+and all HTTP endpoints. DynamoDB and admin auth are mocked via monkeypatch.
+"""
+
 import json
 import pytest
 from functions.stadiums.handler import _validate_stadium, main
 
 
+# A complete valid stadium body used as a base for most tests:
 VALID_BODY = {
     'name': 'בלומפילד',
     'city': 'תל אביב',
@@ -11,6 +25,7 @@ VALID_BODY = {
 }
 
 
+# Builds a minimal API Gateway event without JWT (public GET routes don't need auth):
 def _ev(method, route_key, body=None, path=None):
     return {
         'requestContext': {'http': {'method': method}},
@@ -42,6 +57,7 @@ def test_validate_stadium_name_too_long():
     assert _validate_stadium(body) is not None
 
 
+# Geographic bounds: lat must be within [-90, 90]:
 def test_validate_stadium_lat_too_high():
     body = {**VALID_BODY, 'lat': 91}
     assert _validate_stadium(body) is not None
@@ -52,6 +68,7 @@ def test_validate_stadium_lat_too_low():
     assert _validate_stadium(body) is not None
 
 
+# Geographic bounds: lng must be within [-180, 180]:
 def test_validate_stadium_lng_too_high():
     body = {**VALID_BODY, 'lng': 181}
     assert _validate_stadium(body) is not None
@@ -62,6 +79,7 @@ def test_validate_stadium_lng_too_low():
     assert _validate_stadium(body) is not None
 
 
+# Boundary values (exactly ±90 and ±180) must be accepted:
 @pytest.mark.parametrize('lat', [90, -90, 0])
 def test_validate_stadium_lat_boundary_values_accepted(lat):
     body = {**VALID_BODY, 'lat': lat}
@@ -84,6 +102,7 @@ def test_validate_stadium_non_numeric_lng():
     assert _validate_stadium(body) is not None
 
 
+# Missing lat key entirely (not just empty string):
 def test_validate_stadium_missing_lat():
     body = {**VALID_BODY}
     del body['lat']
@@ -134,6 +153,7 @@ def test_create_stadium_success(monkeypatch):
     assert data['name'] == VALID_BODY['name']
 
 
+# Missing required fields should return 400:
 def test_create_stadium_invalid_body_returns_400(monkeypatch):
     monkeypatch.setattr('functions.stadiums.handler.require_admin', lambda e: None)
     r = main(_ev('POST', 'POST /stadiums', body={'name': 'Test'}), None)
