@@ -14,6 +14,8 @@
  *   Delete — confirms via ConfirmDialog then calls DELETE /stadiums/{id}.
  *
  * Form fields: name, city, lat (latitude), lng (longitude).
+ *
+ * @feature F-15 | Manage Stadiums
  */
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'

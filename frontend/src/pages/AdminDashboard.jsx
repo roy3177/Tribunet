@@ -15,6 +15,9 @@
  * Match table: supports pagination (PAGE_SIZE = 10), animated rows,
  *              inline edit and delete with a ConfirmDialog.
  * Quick links to /admin/stadiums and /admin/users for extended management.
+ *
+ * @feature F-12 | Admin Dashboard
+ * @feature F-14 | Edit/Delete Match
  */
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'

@@ -15,6 +15,8 @@
  *
  * On success redirects to the home page (/). Links to /register and
  * /forgot-password for account creation and password recovery.
+ *
+ * @feature F-02 | User Login
  */
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'

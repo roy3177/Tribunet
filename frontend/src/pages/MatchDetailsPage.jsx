@@ -17,6 +17,9 @@
  *   - Link back to /map.
  *
  * Renders a not-found message when the match ID does not exist.
+ *
+ * @feature F-07 | View Match Details
+ * @feature F-08 | Add/Remove Favorites
  */
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'

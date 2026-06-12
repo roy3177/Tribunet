@@ -13,6 +13,8 @@ Deleting a user removes them from both systems.
 User:   GET /users/me, PUT /users/me
 Admin:  GET /users, DELETE /users/{id}
 
+@feature F-10 | Edit User Profile
+@feature F-15 | Manage Users
 """
 
 import os
@@ -57,7 +59,7 @@ def main(event, context):
         print(f'[users] Unhandled error: {e}')
         return response.server_error()
 
-# Return the current user's profile. Auto-creates a DynamoDB record on first login:
+# F-10 | Edit User Profile — Return the current user's profile. Auto-creates a DynamoDB record on first login:
 def _get_me(event: dict):
 
     from datetime import datetime, timezone
@@ -83,7 +85,7 @@ def _get_me(event: dict):
         print(f'[users] Auto-created DynamoDB record for {email}')
     return response.ok(item)
 
-# Update the current user's display name. Returns 400 if name is empty or too long:
+# F-10 | Edit User Profile — Update the current user's display name. Returns 400 if name is empty or too long:
 def _update_me(event: dict):
     import json
     claims  = get_claims(event)
@@ -106,13 +108,13 @@ def _update_me(event: dict):
     put_item(USERS_TABLE, updated)
     return response.ok(updated)
 
-# Return all users from DynamoDB. Admin only:
+# F-15 | Manage Users — Return all users from DynamoDB. Admin only:
 def _get_users(event: dict):
     require_admin(event)
     items = scan_with_filter(USERS_TABLE)
     return response.ok(items)
 
-# Delete a user from both Cognito and DynamoDB by userId. Admin only:
+# F-15 | Manage Users — Delete a user from both Cognito and DynamoDB by userId. Admin only:
 def _delete_user(event: dict):
 
     require_admin(event)

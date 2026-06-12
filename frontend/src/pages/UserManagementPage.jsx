@@ -14,6 +14,8 @@
  * Delete is guarded by ConfirmDialog and calls DELETE /users/{userId},
  * which removes the user from both Cognito and DynamoDB.
  * Admins and the currently logged-in user cannot be deleted.
+ *
+ * @feature F-15 | Manage Users
  */
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'

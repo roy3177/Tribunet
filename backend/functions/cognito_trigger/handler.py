@@ -14,6 +14,8 @@ Triggered by two Cognito events:
 
 Important: Cognito requires the original event object to be returned unchanged.
 Any exception here must NOT be re-raised — it would block the user from signing in.
+
+@feature F-01 | User Registration (post-confirmation sync to DynamoDB)
 """
 
 import os

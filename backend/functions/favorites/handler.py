@@ -12,6 +12,7 @@ GET /favorites returns full match data, not just IDs — enriched by joining wit
 
 Auth: all endpoints require a valid JWT (regular user or admin).
 
+@feature F-08 | Add/Remove Favorites
 """
 
 import os
@@ -64,7 +65,7 @@ def main(event, context):
         print(f'[favorites] Unhandled error: {e}')
         return response.server_error()
 
-# Get all favorites for the current user, enriched with full match data. Returns an empty list if no favorites:
+# F-08 | Add/Remove Favorites — Get all favorites for the current user, enriched with full match data. Returns an empty list if no favorites:
 def _get_favorites(user_id: str):
 
     # Query by userId (partition key of the Favorites GSI) to get all saved matchIds.
@@ -82,7 +83,7 @@ def _get_favorites(user_id: str):
 
     return response.ok(enriched)
 
-# Add a match to the current user's favorites. Returns 404 if the match does not exist. Idempotent — adding the same match multiple times has no effect.
+# F-08 | Add/Remove Favorites — Add a match to the current user's favorites. Returns 404 if the match does not exist. Idempotent — adding the same match multiple times has no effect.
 def _add_favorite(user_id: str, match_id: str):
 
     # Verify the match exists before saving the favorite — prevents orphaned records.
@@ -99,7 +100,7 @@ def _add_favorite(user_id: str, match_id: str):
     return response.created(item)
 
 
-# Remove a match from the current user's favorites. Returns 404 if the favorite does not exist.
+# F-08 | Add/Remove Favorites — Remove a match from the current user's favorites. Returns 404 if the favorite does not exist.
 def _remove_favorite(user_id: str, match_id: str):
 
     existing = get_item(FAVORITES_TABLE, {'userId': user_id, 'matchId': match_id})

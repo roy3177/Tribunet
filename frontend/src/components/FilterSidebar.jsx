@@ -14,6 +14,9 @@
  * On desktop (lg+) it sits inline as a relative sidebar.
  * The footer displays the current filtered match count.
  * Active filter count is shown as a badge on the header.
+ *
+ * @feature F-05 | Filter Matches
+ * @feature F-06 | Search on Map
  */
 import { motion, AnimatePresence } from 'framer-motion'
 import { SlidersHorizontal, X, ChevronDown, Search } from 'lucide-react'

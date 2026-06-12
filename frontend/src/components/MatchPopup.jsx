@@ -16,6 +16,9 @@
  *
  * The popup is dismissed via the X button or by clicking the map background.
  * Returns null when no stadium is selected.
+ *
+ * @feature F-08 | Add/Remove Favorites
+ * @feature F-09 | View Stadium Map
  */
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'

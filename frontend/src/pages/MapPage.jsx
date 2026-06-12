@@ -16,6 +16,11 @@
  *   - Clicking a marker flies the camera to the stadium and opens a MatchPopup.
  *   - Authenticated users can toggle match favorites inline from the popup.
  *   - Map style: OpenFreeMap dark (dev) or Amazon Location Service (prod).
+ *
+ * @feature F-04 | View Matches List
+ * @feature F-05 | Filter Matches
+ * @feature F-06 | Search on Map
+ * @feature F-09 | View Stadium Map
  */
 import { useState, useCallback, useRef } from 'react'
 import Map, { NavigationControl, ScaleControl } from 'react-map-gl/maplibre'

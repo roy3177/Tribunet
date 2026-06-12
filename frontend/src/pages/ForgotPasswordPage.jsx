@@ -14,6 +14,8 @@
  *   Step 'done'  — success screen with a redirect button to /login.
  *
  * UserNotFoundException is silently swallowed to avoid email enumeration.
+ *
+ * @feature F-03 | Forgot Password
  */
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'

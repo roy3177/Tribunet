@@ -16,6 +16,11 @@
  *
  * On mount, checkUser() restores the session from Cognito and fetches
  * the user's profile from GET /users/me to determine role (admin/user).
+ *
+ * @feature F-01 | User Registration
+ * @feature F-02 | User Login
+ * @feature F-03 | Forgot Password
+ * @feature F-11 | Logout
  */
 import { createContext, useContext, useState, useEffect } from 'react'
 import {

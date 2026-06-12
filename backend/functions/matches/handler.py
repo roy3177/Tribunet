@@ -12,6 +12,11 @@ Routes requests based on routeKey injected by API Gateway HTTP API.
 
 Public:   GET /matches, GET /matches/{id}
 Admin:    POST /matches, PUT /matches/{id}, DELETE /matches/{id}
+
+@feature F-04 | View Matches List
+@feature F-07 | View Match Details
+@feature F-13 | Add New Match
+@feature F-14 | Edit/Delete Match
 """
 
 
@@ -79,7 +84,7 @@ def main(event, context):
         print(f'[matches] Unhandled error: {e}')
         return response.server_error()
 
-# Return a paginated list of matches. Supports limit and base64 lastKey cursor:
+# F-04 | View Matches List — Return a paginated list of matches. Supports limit and base64 lastKey cursor:
 def _get_matches(event: dict):
 
     params = event.get('queryStringParameters') or {}
@@ -109,7 +114,7 @@ def _get_matches(event: dict):
         'count': len(result['items'])
     })
 
-# Return a single match by matchId. Returns 404 if not found:
+# F-07 | View Match Details — Return a single match by matchId. Returns 404 if not found:
 def _get_match(match_id: str):
         
     item = get_item(MATCHES_TABLE, {'matchId': match_id})
@@ -117,7 +122,7 @@ def _get_match(match_id: str):
         return response.not_found('Match')
     return response.ok(item)
 
-# Create a new match. Admin only. Validates fields and resolves stadiumName from stadiumId:
+# F-13 | Add New Match — Create a new match. Admin only. Validates fields and resolves stadiumName from stadiumId:
 def _create_match(event: dict):
 
     require_admin(event)
@@ -149,7 +154,7 @@ def _create_match(event: dict):
     put_item(MATCHES_TABLE, item)
     return response.created(item)
 
-# Update an existing match by matchId. Admin only. Merges existing fields with new body:
+# F-14 | Edit Match — Update an existing match by matchId. Admin only. Merges existing fields with new body:
 def _update_match(event: dict, match_id: str):
 
     require_admin(event)
@@ -174,7 +179,7 @@ def _update_match(event: dict, match_id: str):
     put_item(MATCHES_TABLE, merged)
     return response.ok(merged)
 
-# Delete a match by matchId. Admin only. Returns 404 if not found:
+# F-14 | Delete Match — Delete a match by matchId. Admin only. Returns 404 if not found:
 def _delete_match(event: dict, match_id: str):
         
     require_admin(event)

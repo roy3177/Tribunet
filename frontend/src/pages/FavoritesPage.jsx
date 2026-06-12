@@ -14,6 +14,8 @@
  * Removing a favorite calls DELETE /favorites/{matchId} and optimistically
  * removes the card from the list with an exit animation.
  * Empty state guides the user to /map to discover matches.
+ *
+ * @feature F-08 | Add/Remove Favorites
  */
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'

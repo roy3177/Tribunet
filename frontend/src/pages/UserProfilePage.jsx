@@ -15,6 +15,9 @@
  *                      saving calls PUT /users/profile and updates AuthContext.
  *   Quick links      — shortcuts to /favorites, /map, and /admin (admin only).
  *   Logout           — calls AuthContext.logout and redirects to /.
+ *
+ * @feature F-10 | Edit User Profile
+ * @feature F-11 | Logout
  */
 import { useState } from 'react'
 import { motion } from 'framer-motion'

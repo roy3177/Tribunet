@@ -15,6 +15,8 @@
  *
  * On success the user is redirected to /login.
  * If the email already exists and is unconfirmed, a new code is resent automatically.
+ *
+ * @feature F-01 | User Registration
  */
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'

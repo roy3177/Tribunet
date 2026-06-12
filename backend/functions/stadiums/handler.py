@@ -14,6 +14,8 @@ since it does not support Python's native float type.
 Public:  GET /stadiums, GET /stadiums/{id}
 Admin:   POST /stadiums, PUT /stadiums/{id}, DELETE /stadiums/{id}
 
+@feature F-09 | View Stadium Map
+@feature F-15 | Manage Stadiums
 """
 
 
@@ -83,7 +85,7 @@ def main(event, context):
         print(f'[stadiums] Unhandled error: {e}')
         return response.server_error()
 
-# Return all stadiums as a list:
+# F-09 | View Stadium Map — Return all stadiums as a list:
 def _get_stadiums():
 
     items = scan_with_filter(STADIUMS_TABLE)
@@ -97,7 +99,7 @@ def _get_stadium(stadium_id: str):
         return response.not_found('Stadium')
     return response.ok(item)
 
-# Create a new stadium. Admin only. Stores lat/lng as Decimal for DynamoDB compatibility:
+# F-15 | Manage Stadiums — Create a new stadium. Admin only. Stores lat/lng as Decimal for DynamoDB compatibility:
 def _create_stadium(event: dict):
 
     require_admin(event)
@@ -118,7 +120,7 @@ def _create_stadium(event: dict):
     put_item(STADIUMS_TABLE, item)
     return response.created(item)
 
-# Update an existing stadium by stadiumId. Admin only. Returns 404 if not found. Merges provided fields with existing item, allowing partial updates. Validates merged result before saving:
+# F-15 | Manage Stadiums — Update an existing stadium by stadiumId. Admin only. Returns 404 if not found. Merges provided fields with existing item, allowing partial updates. Validates merged result before saving:
 def _update_stadium(event: dict, stadium_id: str):
     require_admin(event)
 
@@ -142,7 +144,7 @@ def _update_stadium(event: dict, stadium_id: str):
     put_item(STADIUMS_TABLE, merged)
     return response.ok(merged)
 
-# Delete a stadium by stadiumId. Admin only. Returns 404 if not found:
+# F-15 | Manage Stadiums — Delete a stadium by stadiumId. Admin only. Returns 404 if not found:
 def _delete_stadium(event: dict, stadium_id: str):
 
     require_admin(event)
