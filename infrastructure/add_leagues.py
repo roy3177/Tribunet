@@ -1,4 +1,19 @@
-"""Seed Israeli football leagues into tribunet-leagues-prod."""
+"""
+@ author: Roy Meoded
+@ author: Yarin Keshet
+@ author: Tomer Gal
+
+
+seed_leagues.py — Seed Israeli Football Leagues
+================================================
+Seeds the initial set of Israeli football leagues and cups
+into the tribunet-leagues-prod DynamoDB table.
+
+Leagues: ליגת העל, ליגה לאומית, ליגה א', ליגה ב'
+Cups:    גביע המדינה, גביע הטוטו, גביע ליגת העל
+
+"""
+
 import boto3, uuid
 
 table = boto3.resource('dynamodb', region_name='us-east-1').Table('tribunet-leagues-prod')

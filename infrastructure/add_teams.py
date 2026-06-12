@@ -1,4 +1,22 @@
-"""Seed Israeli football teams into tribunet-teams-prod."""
+"""
+@ author: Roy Meoded
+@ author: Yarin Keshet
+@ author: Tomer Gal
+
+
+seed_teams.py — Seed Israeli Football Teams
+============================================
+Seeds the initial set of Israeli football teams into the
+tribunet-teams-prod DynamoDB table.
+
+Covers two tiers:
+  ליגת העל      — 14 top-flight clubs
+  ליגה לאומית   — 12 second-division clubs
+
+"""
+
+
+
 import boto3, uuid
 
 table = boto3.resource('dynamodb', region_name='us-east-1').Table('tribunet-teams-prod')

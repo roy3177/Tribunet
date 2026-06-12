@@ -1,8 +1,18 @@
 """
-One-time backfill: syncs all Cognito users into DynamoDB tribunet-users-prod.
-Skips users that already exist (preserves their role and data).
-Run: python infrastructure/sync_cognito_users.py
+@ author: Roy Meoded
+@ author: Yarin Keshet
+@ author: Tomer Gal
+
+sync_cognito_users.py — Cognito → DynamoDB User Backfill
+=========================================================
+One-time backfill script that syncs all existing Cognito users into the
+tribunet-users-prod DynamoDB table. Skips users that already exist,
+preserving their current role and data.
+
+Run:  python infrastructure/sync_cognito_users.py
+
 """
+
 import boto3
 from datetime import timezone
 
