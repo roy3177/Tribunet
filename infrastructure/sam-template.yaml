@@ -50,6 +50,9 @@ Resources:
     Type: AWS::Serverless::HttpApi
     Properties:
       StageName: !Ref Stage
+      DefaultRouteSettings:
+        ThrottlingBurstLimit: 100
+        ThrottlingRateLimit: 50
       Auth:
         DefaultAuthorizer: CognitoAuth
         Authorizers:
