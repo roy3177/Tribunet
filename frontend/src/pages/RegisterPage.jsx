@@ -143,12 +143,7 @@ function RegisterForm({ onSuccess }) {
     } catch (err) {
       const errName = err?.name ?? ''
       if (errName === 'UsernameExistsException') {
-        try {
-          await resendCode(email)
-          onSuccess(email)
-        } catch {
-          setApiError('כתובת האימייל כבר רשומה ומאומתת במערכת')
-        }
+        setApiError('כתובת האימייל כבר רשומה במערכת — נסה להתחבר')
       } else if (errName === 'InvalidPasswordException') setApiError('הסיסמה אינה עומדת בדרישות')
       else setApiError('שגיאה בהרשמה, נסה שוב')
     } finally {
