@@ -2,7 +2,7 @@
 
 A serverless web platform for football fans in Israel. Browse upcoming matches on an interactive map, filter by league or team, save favorites, and buy tickets — all powered by AWS.
 
-**Live Demo:** https://d3qx6x8ydteha.cloudfront.net
+**Live Demo:** [https://d3qx6x8ydteha.cloudfront.net](https://d3qx6x8ydteha.cloudfront.net/login)
 
 ![AWS Serverless](https://img.shields.io/badge/AWS-Serverless-orange)
 ![Python](https://img.shields.io/badge/Python-3.13-blue)
