@@ -75,7 +75,7 @@ function AnimatedRoutes() {
       <Routes>
         {/* Public routes */}
         <Route element={<AppLayout />}>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<ProtectedRoute><HomePage /></ProtectedRoute>} />
           <Route path="/map" element={<MapPage />} />
           <Route path="/matches/:id" element={<MatchDetailsPage />} />
         </Route>
