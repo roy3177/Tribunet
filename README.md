@@ -111,16 +111,7 @@ Tribunet/
 │   ├── deploy.ps1             # Unified deployment script (build + deploy + seed)
 │   ├── add_leagues.py         # Seed: 7 Israeli football leagues
 │   └── add_teams.py           # Seed: 26 Israeli football teams
-│
-└── docs/                      # Documentation
-    ├── architecture.png
-    ├── swagger.yaml               # Full OpenAPI 3.0 specification
-    ├── DEVELOPER_REFERENCE.md     # Boto3-style API + module reference
-    ├── DEVELOPER_GUIDE.md         # Setup, testing, deployment guide
-    ├── USER_GUIDE.md              # End-user manual
-    ├── ADMIN_GUIDE.md             # Admin operations guide
-    ├── RISK_ANALYSIS.md           # Security & operational risk analysis
-    └── COST_ESTIMATION.md         # AWS monthly cost breakdown
+
 ```
 
 ---
